@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Overlay Studio Pro - Multi-Language</title>
+    
+    <script src="libs/tailwind.js"></script>
+    <script src="libs/pdf-lib.min.js"></script>
+    <script src="libs/xlsx.full.min.js"></script>
+    <script src="libs/fuse.js"></script>
+    <script src="libs/jszip.min.js"></script>
+    <script src="libs/lucide.min.js"></script>
+    <script src="libs/pdf.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap');
+        
+        :root {
+            --primary: #60a5fa;
+            --emerald: #7dd3fc;
+            --vortex-blue: #60a5fa;
+            --vortex-pink: #7dd3fc;
+            --vortex-yellow: #bae6fd;
+            --vortex-ink: #e0f2fe;
+            --vortex-ice: #f5fbff;
+            --glass-text: #0f172a;
+            --glass-subtle: rgba(15, 23, 42, 0.62);
+        }
+
+        body.vortex-body { font-family: 'Sora', sans-serif; overflow-x: hidden; background: #eaf4ff; color: var(--glass-text); }
+
+        .vortex-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(1000px 700px at 10% -10%, rgba(125, 211, 252, 0.65) 0%, rgba(125, 211, 252, 0) 60%),
+                radial-gradient(900px 700px at 90% 10%, rgba(96, 165, 250, 0.55) 0%, rgba(96, 165, 250, 0) 65%),
+                radial-gradient(900px 800px at 50% 120%, rgba(186, 230, 253, 0.8) 0%, rgba(186, 230, 253, 0) 70%),
+                linear-gradient(180deg, #eaf4ff 0%, #f7fbff 100%);
+        }
+
+        #app { position: relative; z-index: 1; }
+
+        .vortex-hero {
+            position: relative;
+            overflow: hidden;
+            border-radius: 32px;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            background: rgba(255, 255, 255, 0.65);
+            box-shadow: 0 30px 70px rgba(15, 23, 42, 0.12);
+            backdrop-filter: blur(18px);
+        }
+
+        .vortex-hero::before,
+        .vortex-hero::after {
+            content: "";
+            position: absolute;
+            border-radius: 999px;
+            opacity: 0.5;
+            filter: blur(6px);
+        }
+
+        .vortex-hero::before {
+            width: 70%;
+            height: 160%;
+            left: -25%;
+            top: -70%;
+            background: rgba(125, 211, 252, 0.35);
+        }
+
+        .vortex-hero::after {
+            width: 45%;
+            height: 140%;
+            right: -10%;
+            bottom: -70%;
+            background: rgba(96, 165, 250, 0.28);
+        }
+
+        .vortex-hero > * { position: relative; z-index: 1; }
+
+        .vortex-title {
+            font-size: clamp(1.6rem, 1.1rem + 2vw, 2.6rem);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #0f172a;
+        }
+
+        .vortex-hero .text-slate-500 { color: var(--glass-subtle) !important; }
+        .vortex-hero .text-slate-600 { color: #1e293b !important; }
+        .vortex-hero .text-indigo-950 { color: #0f172a !important; }
+        .vortex-hero .text-indigo-600 { color: #1d4ed8 !important; }
+        .vortex-hero .bg-slate-50 { background: rgba(255, 255, 255, 0.6) !important; }
+        .vortex-hero .border-slate-200 { border-color: rgba(148, 163, 184, 0.4) !important; }
+
+        #stepper { background: rgba(255, 255, 255, 0.55); border: 1px solid rgba(148, 163, 184, 0.4); }
+        .step-active { background: var(--primary); color: #0f172a; box-shadow: 0 0 18px rgba(96, 165, 250, 0.5); }
+        
+        .preview-canvas-container { position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); background: white; margin: 0 auto; }
+        .drag-handle { cursor: move; user-select: none; touch-action: none; position: absolute; white-space: nowrap; z-index: 40; }
+        .step-active { background: var(--primary); color: white; transform: scale(1.1); box-shadow: 0 0 15px rgba(79, 70, 229, 0.4); }
+        
+        input[type="range"] { accent-color: var(--primary); cursor: pointer; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .excel-table { border-collapse: separate; border-spacing: 0; table-layout: fixed; width: 100%; }
+        .excel-cell { 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            border-right: 1px solid #e2e8f0; 
+            border-bottom: 1px solid #e2e8f0;
+            height: 40px;
+            padding: 0 12px;
+            line-height: 40px;
+            background-clip: padding-box;
+        }
+        
+        .row-excluded { opacity: 0.35; background-color: #f8fafc; filter: grayscale(1); }
+        .row-selected { background-color: rgba(79, 70, 229, 0.04); }
+
+        #app button.bg-indigo-600 {
+            background: linear-gradient(135deg, #60a5fa, #38bdf8);
+            color: #0f172a;
+            box-shadow: 0 18px 35px rgba(59, 130, 246, 0.25);
+        }
+
+        #app button.bg-emerald-500 {
+            background: linear-gradient(135deg, #7dd3fc, #bae6fd);
+            color: #0f172a;
+        }
+
+        #app .text-indigo-600 { color: #1d4ed8; }
+        #app .bg-indigo-50 { background: rgba(96, 165, 250, 0.12); }
+        #app .bg-emerald-50 { background: rgba(125, 211, 252, 0.18); }
+        #app .text-emerald-500,
+        #app .text-emerald-600 { color: #0284c7; }
+
+        #loading-overlay { background: rgba(148, 163, 184, 0.45); backdrop-filter: blur(8px); }
+
+        .column-active-selection { background-color: rgba(79, 70, 229, 0.1); outline: 2px solid var(--primary); outline-offset: -2px; z-index: 10; }
+        .column-mapped-key { background-color: rgba(79, 70, 229, 0.05); border-left: 2px solid var(--primary) !important; border-right: 2px solid var(--primary) !important; }
+        .column-mapped-ral { background-color: rgba(16, 185, 129, 0.05); border-left: 2px solid var(--emerald) !important; border-right: 2px solid var(--emerald) !important; }
+        
+        .header-active-selection { background-color: var(--primary) !important; color: white !important; }
+        .header-mapped-key { background-color: var(--primary) !important; color: white !important; }
+        .header-mapped-ral { background-color: var(--emerald) !important; color: white !important; }
+        
+        tr.header-row th { cursor: pointer; transition: background 0.2s; border-right: 1px solid #cbd5e1; }
+        .excel-input-group:focus-within { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-in { animation: fadeIn 0.3s ease-out forwards; }
+    </style>
+</head>
+<body class="min-h-screen vortex-body">
+
+    <div class="vortex-bg" aria-hidden="true"></div>
+
+    <div id="app" class="max-w-7xl mx-auto p-4 md:p-8">
+        <header class="mb-8 flex flex-col lg:flex-row lg:items-start justify-between gap-6 bg-white p-6 rounded-3xl shadow-sm border border-slate-200 vortex-hero">
+            <div>
+                <h1 class="vortex-title flex items-center gap-3">
+                    <i data-lucide="file-text" class="w-8 h-8 text-indigo-600"></i>
+                    OVERLAY STUDIO
+                </h1>
+                <p class="text-slate-500 font-medium text-sm" data-t="subtitle">Automated RAL Overlay Engine</p>
+                <div class="flex items-center bg-slate-50 rounded-2xl p-2 border border-slate-200 overflow-x-auto no-scrollbar mt-4" id="stepper"></div>
+            </div>
+            
+            <div class="flex items-center gap-4 shrink-0 self-center lg:self-start">
+                <div class="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-200">
+                    <i data-lucide="languages" class="w-4 h-4 text-slate-400"></i>
+                    <select id="lang-selector" onchange="changeLanguage(this.value)" class="bg-transparent text-xs font-black text-slate-600 outline-none uppercase tracking-widest cursor-pointer">
+                        <option value="en">English</option>
+                        <option value="es">Español</option>
+                        <option value="nl">Nederlands</option>
+                        <option value="pl">Polski</option>
+                    </select>
+                </div>
+            </div>
+        </header>
+
+        <main id="main-content" class="min-h-[600px]"></main>
+    </div>
+
+    <div id="loading-overlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white p-10 rounded-3xl shadow-2xl text-center max-w-md w-full border border-white/20">
+            <div class="w-20 h-20 border-[6px] border-slate-100 border-t-indigo-600 rounded-full animate-spin mx-auto mb-6"></div>
+            <h3 class="text-2xl font-black text-indigo-950 mb-2" data-t="processing">Processing...</h3>
+            <p class="text-slate-500 font-medium" data-t="loading_msg">Working locally in browser.</p>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * Internationalization Dictionary
+         */
+        const translations = {
+            en: {
+                subtitle: "Automated RAL Overlay Engine",
+                processing: "Processing...",
+                loading_msg: "Working locally in browser.",
+                step_project: "Project",
+                step_source: "Source",
+                step_match: "Match",
+                step_design: "Design",
+                step_review: "Review",
+                step_finish: "Finish",
+                init_project: "Initialize Project",
+                proj_label: "Project Name / ID",
+                init_desc: "Provide a project name above, then upload your engineering spec.",
+                upload_btn: "Upload Data Spreadsheet",
+                source_title: "Source PDF Selection",
+                add_files: "Add Files",
+                match_files: "Match Files",
+                match_review: "Match Review",
+                setup_layout: "Setup Layout",
+                col_id: "Excel Part ID",
+                col_drawing: "Identified Drawing",
+                col_status: "Status",
+                col_actions: "Actions",
+                layout_designer: "Layout Designer",
+                font_size: "Font Size",
+                x_pos: "X-Pos (%)",
+                y_pos: "Y-Pos (%)",
+                back: "BACK",
+                preview_samples: "PREVIEW SAMPLES",
+                drag_msg: "Move Anywhere",
+                preflight: "Pre-Flight Check",
+                continue_finish: "CONTINUE TO FINISH",
+                export_ready: "Export Ready",
+                export_desc: "Generating drawings for Project:",
+                generate_batch: "GENERATE BATCH (.ZIP)",
+                clean_map: "Clean & Map Specs",
+                clean_map_desc: "Select columns, then uncheck any non-data rows to exclude them.",
+                map_id: "MAP PART ID",
+                map_ral: "MAP RAL",
+                incl_all: "INCL. ALL",
+                excl_all: "EXCL. ALL",
+                process_rows: "PROCESS {count} ROWS",
+                matched: "Matched",
+                suggested: "Suggested",
+                missing: "Missing",
+                mapped_id_label: "Part ID Col:",
+                mapped_ral_label: "RAL Col:",
+                proj_placeholder: "e.g. LACO GLANERBROOK"
+            },
+            es: {
+                subtitle: "Motor de superposición RAL automatizado",
+                processing: "Procesando...",
+                loading_msg: "Trabajando localmente en el navegador.",
+                step_project: "Proyecto",
+                step_source: "Origen",
+                step_match: "Vincular",
+                step_design: "Diseño",
+                step_review: "Revisión",
+                step_finish: "Finalizar",
+                init_project: "Inicializar Proyecto",
+                proj_label: "Nombre / ID del Proyecto",
+                init_desc: "Indique un nombre de proyecto arriba, luego suba su especificación.",
+                upload_btn: "Subir Hoja de Excel",
+                source_title: "Selección de PDF de Origen",
+                add_files: "Añadir Archivos",
+                match_files: "Vincular Archivos",
+                match_review: "Revisión de Vínculos",
+                setup_layout: "Configurar Diseño",
+                col_id: "ID de Pieza Excel",
+                col_drawing: "Plano Identificado",
+                col_status: "Estado",
+                col_actions: "Acciones",
+                layout_designer: "Diseñador de Diseño",
+                font_size: "Tamaño de Fuente",
+                x_pos: "Posición X (%)",
+                y_pos: "Posición Y (%)",
+                back: "VOLVER",
+                preview_samples: "VISTA PREVIA",
+                drag_msg: "Mover a cualquier lugar",
+                preflight: "Control Previo",
+                continue_finish: "CONTINUAR PARA FINALIZAR",
+                export_ready: "Listo para Exportar",
+                export_desc: "Generando planos para el Proyecto:",
+                generate_batch: "GENERAR LOTE (.ZIP)",
+                clean_map: "Limpiar y Mapear Datos",
+                clean_map_desc: "Seleccione las columnas y desmarque las filas que no sean datos.",
+                map_id: "MAPEAR ID PIEZA",
+                map_ral: "MAPEAR RAL",
+                incl_all: "INCL. TODO",
+                excl_all: "EXCL. TODO",
+                process_rows: "PROCESAR {count} FILAS",
+                matched: "Emparejado",
+                suggested: "Sugerido",
+                missing: "Faltante",
+                mapped_id_label: "Col. ID Pieza:",
+                mapped_ral_label: "Col. RAL:",
+                proj_placeholder: "ej. LACO GLANERBROOK"
+            },
+            nl: {
+                subtitle: "Geautomatiseerde RAL Overlay Engine",
+                processing: "Verwerken...",
+                loading_msg: "Lokaal in browser aan het werk.",
+                step_project: "Project",
+                step_source: "Bron",
+                step_match: "Koppelen",
+                step_design: "Ontwerp",
+                step_review: "Controle",
+                step_finish: "Voltooien",
+                init_project: "Project Initialiseren",
+                proj_label: "Projectnaam / ID",
+                init_desc: "Voer hierboven een projectnaam in en upload vervolgens uw specificaties.",
+                upload_btn: "Excel-bestand Uploaden",
+                source_title: "Bron PDF Selectie",
+                add_files: "Bestanden Toevoegen",
+                match_files: "Bestanden Koppelen",
+                match_review: "Koppelingscontrole",
+                setup_layout: "Layout Instellen",
+                col_id: "Excel Onderdeel ID",
+                col_drawing: "Geïdentificeerde Tekening",
+                col_status: "Status",
+                col_actions: "Acties",
+                layout_designer: "Layout Ontwerper",
+                font_size: "Lettergrootte",
+                x_pos: "X-Positie (%)",
+                y_pos: "Y-Positie (%)",
+                back: "TERUG",
+                preview_samples: "VOORBEELDEN BEKIJKEN",
+                drag_msg: "Overal naartoe slepen",
+                preflight: "Pre-Flight Controle",
+                continue_finish: "DOORGAAN NAAR VOLTOOIEN",
+                export_ready: "Klaar voor Export",
+                export_desc: "Tekeningen genereren voor Project:",
+                generate_batch: "BATCH GENEREREN (.ZIP)",
+                clean_map: "Data Schonen & Koppelen",
+                clean_map_desc: "Selecteer kolommen en vink rijen uit die geen data bevatten.",
+                map_id: "KOPPEL ONDERDEEL ID",
+                map_ral: "KOPPEL RAL",
+                incl_all: "ALLES INCL.",
+                excl_all: "ALLES EXCL.",
+                process_rows: "{count} RIJEN VERWERKEN",
+                matched: "Gekoppeld",
+                suggested: "Suggestie",
+                missing: "Ontbreekt",
+                mapped_id_label: "Kol. Onderdeel ID:",
+                mapped_ral_label: "Kol. RAL:",
+                proj_placeholder: "bijv. LACO GLANERBROOK"
+            },
+            pl: {
+                subtitle: "Zautomatyzowany silnik nakładek RAL",
+                processing: "Przetwarzanie...",
+                loading_msg: "Praca lokalna w przeglądarce.",
+                step_project: "Projekt",
+                step_source: "Źródło",
+                step_match: "Dopasuj",
+                step_design: "Projekt",
+                step_review: "Przegląd",
+                step_finish: "Koniec",
+                init_project: "Inicjalizacja Projektu",
+                proj_label: "Nazwa / ID Projektu",
+                init_desc: "Podaj nazwę projektu powyżej, a następnie prześlij specyfikację.",
+                upload_btn: "Prześlij arkusz Excel",
+                source_title: "Wybór źródłowych plików PDF",
+                add_files: "Dodaj pliki",
+                match_files: "Dopasuj pliki",
+                match_review: "Przegląd dopasowań",
+                setup_layout: "Ustaw układ",
+                col_id: "ID części Excel",
+                col_drawing: "Zidentyfikowany rysunek",
+                col_status: "Status",
+                col_actions: "Akcje",
+                layout_designer: "Projektant układu",
+                font_size: "Rozmiar czcionki",
+                x_pos: "Pozycja X (%)",
+                y_pos: "Pozycja Y (%)",
+                back: "POWRÓT",
+                preview_samples: "PODGLĄD PRÓBEK",
+                drag_msg: "Przesuń w dowolne miejsce",
+                preflight: "Kontrola wstępna",
+                continue_finish: "KONTYNUUJ DO KOŃCA",
+                export_ready: "Gotowe do eksportu",
+                export_desc: "Generowanie rysunków dla projektu:",
+                generate_batch: "GENERUJ PARTIĘ (.ZIP)",
+                clean_map: "Oczyść i mapuj dane",
+                clean_map_desc: "Wybierz kolumny, a następnie odznacz wiersze, które nie są danymi.",
+                map_id: "MAPUJ ID CZĘŚCI",
+                map_ral: "MAPUJ RAL",
+                incl_all: "WŁĄCZ WSZYSTKIE",
+                excl_all: "WYŁĄCZ WSZYSTKIE",
+                process_rows: "PRZETWÓRZ {count} WIERSZY",
+                matched: "Dopasowano",
+                suggested: "Sugerowane",
+                missing: "Brak",
+                mapped_id_label: "Kol. ID części:",
+                mapped_ral_label: "Kol. RAL:",
+                proj_placeholder: "np. LACO GLANERBROOK"
+            }
+        };
+
+        let state = {
+            step: 1,
+            language: 'en',
+            projectName: '',
+            excelData: [],
+            rawExcelRows: [],
+            excelHeaders: [],
+            mapping: { key: null, ral: null },
+            selectedColIdx: null,
+            includedRows: new Set(),
+            lastClickedRow: null,
+            showMapper: false,
+            pdfFiles: [],
+            matches: [],
+            previewImg: null,
+            config: { xPercent: 10, yPercent: 10, fontSize: 32, opacity: 1.0 }
+        };
+
+        function t(key, params = {}) {
+            let str = translations[state.language][key] || key;
+            for (const [k, v] of Object.entries(params)) {
+                str = str.replace(`{${k}}`, v);
+            }
+            return str;
+        }
+
+        function changeLanguage(lang) {
+            state.language = lang;
+            render();
+        }
+
+        /**
+         * PDF.js Local Initialization
+         */
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'libs/pdf.worker.min.js';
+
+        const STEPS_DATA = [
+            { id: 1, name: 'step_project' }, { id: 2, name: 'step_source' }, { id: 3, name: 'step_match' },
+            { id: 4, name: 'step_design' }, { id: 5, name: 'step_review' }, { id: 6, name: 'step_finish' }
+        ];
+
+        function render() {
+            renderStepper();
+            renderStepContent();
+            lucide.createIcons();
+            const subtitle = document.querySelector('[data-t="subtitle"]');
+            if (subtitle) subtitle.innerText = t('subtitle');
+        }
+
+        function renderStepper() {
+            const container = document.getElementById('stepper');
+            container.innerHTML = STEPS_DATA.map((s, idx) => `
+                <div class="flex items-center">
+                    <div class="flex flex-col items-center">
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black transition-all duration-300 
+                            ${state.step === s.id ? 'step-active' : state.step > s.id ? 'bg-emerald-500 text-white' : 'bg-white text-slate-300'}">
+                            ${state.step > s.id ? '<i data-lucide="check" class="w-5 h-5"></i>' : s.id}
+                        </div>
+                        <span class="text-[10px] uppercase font-black mt-1 ${state.step === s.id ? 'text-indigo-600' : 'text-slate-400'}">${t(s.name)}</span>
+                    </div>
+                    ${idx < STEPS_DATA.length - 1 ? '<div class="w-8 h-px bg-slate-200 mx-2 mb-4"></div>' : ''}
+                </div>
+            `).join('');
+        }
+
+        function renderStepContent() {
+            const main = document.getElementById('main-content');
+            switch(state.step) {
+                case 1:
+                    if (state.showMapper) renderVisualMapper(main);
+                    else main.innerHTML = `
+                        <div class="bg-white p-12 rounded-3xl shadow-xl border border-slate-200 text-center animate-in max-w-2xl mx-auto">
+                            <div class="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-8 transform -rotate-3">
+                                <i data-lucide="folder-git-2" class="w-10 h-10"></i>
+                            </div>
+                            <h2 class="text-3xl font-black text-indigo-950 mb-6">${t('init_project')}</h2>
+                            <div class="mb-8 text-left">
+                                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">${t('proj_label')}</label>
+                                <input type="text" id="project-name-input" 
+                                    value="${state.projectName}"
+                                    oninput="state.projectName = this.value"
+                                    placeholder="${t('proj_placeholder')}" 
+                                    class="w-full bg-slate-50 border-2 border-slate-100 p-4 rounded-2xl font-bold text-indigo-950 focus:border-indigo-600 outline-none transition-all excel-input-group">
+                            </div>
+                            <div class="space-y-4">
+                                <p class="text-slate-500 font-medium text-sm mb-4">${t('init_desc')}</p>
+                                <label class="cursor-pointer group relative inline-flex items-center gap-3 px-10 py-5 bg-indigo-600 text-white rounded-2xl font-black hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 active:scale-95">
+                                    <input type="file" class="hidden" accept=".xlsx, .xls" onchange="handleExcel(event)">
+                                    <i data-lucide="file-spreadsheet" class="w-6 h-6"></i> ${t('upload_btn')}
+                                </label>
+                            </div>
+                        </div>`;
+                    break;
+                case 2:
+                    main.innerHTML = `
+                        <div class="bg-white p-10 rounded-3xl shadow-xl border border-slate-200 animate-in">
+                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
+                                <div><h2 class="text-3xl font-black text-indigo-950">${t('source_title')}</h2></div>
+                                <div class="flex gap-4">
+                                    <label class="cursor-pointer px-6 py-3 bg-slate-100 border-2 border-slate-200 rounded-xl font-bold text-slate-700 hover:bg-slate-200 transition-all flex items-center gap-2">
+                                        <input type="file" class="hidden" multiple accept=".pdf" onchange="handlePdfs(event)">
+                                        <i data-lucide="plus"></i> ${t('add_files')}
+                                    </label>
+                                    <button onclick="goToStep(3)" class="px-8 py-3 bg-indigo-600 text-white rounded-xl font-black hover:bg-indigo-700 disabled:opacity-30" ${state.pdfFiles.length === 0 ? 'disabled' : ''}>${t('match_files')}</button>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-6 gap-6 max-h-[450px] overflow-y-auto p-4 border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50">
+                                ${state.pdfFiles.map((f, i) => `<div class="bg-white p-4 rounded-2xl border border-slate-200 text-center relative group">
+                                    <i data-lucide="file-text" class="w-8 h-8 text-rose-400 mx-auto mb-2"></i>
+                                    <p class="text-[10px] font-black uppercase text-slate-500 truncate" title="${f.name}">${f.name}</p>
+                                    <button onclick="removePdf(${i})" class="absolute -top-2 -right-2 bg-slate-900 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><i data-lucide="x" class="w-3 h-3"></i></button>
+                                </div>`).join('')}
+                            </div>
+                        </div>`;
+                    break;
+                case 3:
+                    main.innerHTML = `
+                        <div class="bg-white p-8 rounded-3xl shadow-xl border border-slate-200">
+                             <div class="flex justify-between items-center mb-10">
+                                <h2 class="text-3xl font-black text-indigo-950">${t('match_review')}</h2>
+                                <button onclick="goToStep(4)" class="px-10 py-4 bg-indigo-600 text-white rounded-2xl font-black hover:bg-indigo-700 shadow-xl shadow-indigo-100">${t('setup_layout')}</button>
+                            </div>
+                            <div class="overflow-x-auto rounded-2xl border border-slate-100">
+                                <table class="w-full text-left">
+                                    <thead class="bg-slate-50 border-b border-slate-200">
+                                        <tr>
+                                            <th class="px-6 py-4 font-black text-slate-400 uppercase text-xs">${t('col_id')}</th>
+                                            <th class="px-6 py-4 font-black text-slate-400 uppercase text-xs">${t('col_drawing')}</th>
+                                            <th class="px-6 py-4 font-black text-slate-400 uppercase text-xs">${t('col_status')}</th>
+                                            <th class="px-6 py-4 font-black text-slate-400 uppercase text-xs text-right">${t('col_actions')}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100">
+                                        ${state.matches.map((m, i) => `
+                                            <tr class="hover:bg-slate-50/50">
+                                                <td class="px-6 py-5">
+                                                    <div class="font-black text-indigo-950 text-lg">${m.excel.key}</div>
+                                                    <div class="flex gap-2 mt-1">
+                                                        <span class="text-[10px] font-bold bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded italic">${m.excel.text}</span>
+                                                        <span class="w-3 h-3 rounded-full mt-1 border border-slate-200" style="background: ${m.excel.color}"></span>
+                                                    </div>
+                                                </td>
+                                                <td class="px-6 py-5 font-bold text-slate-700">${m.file ? m.file.name : `<span class="text-rose-400">${t('missing')}</span>`}</td>
+                                                <td class="px-6 py-5">${getStatusBadge(m)}</td>
+                                                <td class="px-6 py-5 text-right flex justify-end gap-2">
+                                                    ${m.status === 'suggestion' ? `<button onclick="confirmMatch(${i})" class="p-2 bg-emerald-500 text-white rounded-lg"><i data-lucide="check" class="w-4 h-4"></i></button>` : ''}
+                                                    <button onclick="removeMatch(${i})" class="p-2 text-slate-300 hover:text-rose-500 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                                </td>
+                                            </tr>`).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>`;
+                    break;
+                case 4:
+                    main.innerHTML = `
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in">
+                            <div class="lg:col-span-4 space-y-6">
+                                <div class="bg-white p-8 rounded-3xl shadow-xl border border-slate-200">
+                                    <h3 class="text-2xl font-black mb-8 flex items-center gap-2"><i data-lucide="sliders" class="text-indigo-600"></i> ${t('layout_designer')}</h3>
+                                    <div class="space-y-8">
+                                        <div>
+                                            <div class="flex justify-between text-xs font-black text-slate-400 mb-3 tracking-widest uppercase">${t('font_size')} <span>${state.config.fontSize}pt</span></div>
+                                            <input type="range" min="6" max="250" value="${state.config.fontSize}" oninput="updateConfig('fontSize', this.value)" class="w-full h-3 bg-slate-100 rounded-full appearance-none cursor-pointer">
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-6">
+                                            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                                                <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">${t('x_pos')}</label>
+                                                <input type="number" step="0.1" value="${state.config.xPercent.toFixed(1)}" oninput="updateConfig('xPercent', this.value)" class="w-full bg-transparent text-xl font-black text-indigo-950 outline-none">
+                                            </div>
+                                            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                                                <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">${t('y_pos')}</label>
+                                                <input type="number" step="0.1" value="${state.config.yPercent.toFixed(1)}" oninput="updateConfig('yPercent', this.value)" class="w-full bg-transparent text-xl font-black text-indigo-950 outline-none">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-10 flex gap-4">
+                                        <button onclick="goToStep(3)" class="flex-1 py-4 bg-slate-100 font-black rounded-2xl text-slate-500">${t('back')}</button>
+                                        <button onclick="goToStep(5)" class="flex-1 py-4 bg-indigo-600 font-black rounded-2xl text-white shadow-xl shadow-indigo-200">${t('preview_samples')}</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="lg:col-span-8 bg-slate-900 rounded-[40px] p-8 flex items-center justify-center min-h-[700px] overflow-hidden relative shadow-inner">
+                                <div id="drawing-container" class="preview-canvas-container" style="width: 100%; max-width: 900px;">
+                                    <img src="${state.previewImg}" class="w-full h-auto rounded-sm block pointer-events-none" id="preview-drawing">
+                                    <div id="drag-text" class="drag-handle font-black px-2 border-2 border-dashed border-transparent hover:border-indigo-500 rounded flex flex-col items-center group transition-all"
+                                        style="left: ${state.config.xPercent}%; top: ${100 - state.config.yPercent}%; font-size: calc(${state.config.fontSize}px * 0.4); color: ${state.excelData[0]?.color || '#ff0000'}; transform: translate(-50%, -50%)"
+                                        onmousedown="startDrag(event)">
+                                        <div class="absolute -top-8 bg-indigo-600 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap uppercase tracking-widest">${t('drag_msg')}</div>
+                                        ${state.excelData[0]?.text || 'RAL 2010'}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+                    setTimeout(initDrag, 100);
+                    break;
+                case 5: renderReviewSamples(); break;
+                case 6:
+                    main.innerHTML = `
+                        <div class="bg-white p-16 rounded-3xl shadow-xl border border-slate-200 text-center animate-in slide-in-from-bottom-6">
+                            <div class="w-32 h-32 bg-emerald-50 text-emerald-500 rounded-[40px] flex items-center justify-center mx-auto mb-10 transform rotate-12">
+                                <i data-lucide="package-check" class="w-16 h-16"></i>
+                            </div>
+                            <h2 class="text-4xl font-black text-indigo-950 mb-4">${t('export_ready')}</h2>
+                            <p class="text-slate-500 mb-12 max-w-lg mx-auto font-medium text-lg leading-relaxed text-balance">
+                                ${t('export_desc')} <span class="text-indigo-600 font-black uppercase tracking-tight">${state.projectName}</span>.
+                                <br>Generating <span class="text-indigo-600 font-black">${state.matches.filter(m=>m.file).length}</span> files.
+                            </p>
+                            <div class="flex flex-col sm:flex-row gap-6 justify-center">
+                                <button onclick="goToStep(4)" class="px-10 py-5 bg-slate-100 text-slate-700 rounded-2xl font-black hover:bg-slate-200">${t('back')}</button>
+                                <button onclick="processBatch()" class="px-12 py-5 bg-indigo-600 text-white rounded-2xl font-black hover:bg-indigo-700 shadow-2xl shadow-indigo-100 flex items-center gap-3 active:scale-95 transition-all">
+                                    <i data-lucide="download-cloud" class="w-6 h-6"></i> ${t('generate_batch')}
+                                </button>
+                            </div>
+                        </div>`;
+                    break;
+            }
+        }
+
+        function renderVisualMapper(container) {
+            const numHeaders = state.excelHeaders.length;
+            container.innerHTML = `
+                <div class="bg-white p-8 rounded-3xl shadow-xl border border-slate-200 animate-in h-[75vh] flex flex-col">
+                    <div class="flex justify-between items-start mb-6 shrink-0 gap-8">
+                        <div class="flex-1">
+                            <h2 class="text-2xl font-black text-indigo-950">${t('clean_map')}</h2>
+                            <p class="text-slate-500 text-sm font-medium italic">${t('clean_map_desc')}</p>
+                            <div class="flex gap-4 mt-4">
+                                <button onclick="assignMapping('key')" class="px-5 py-2 bg-indigo-600 text-white text-[10px] font-black rounded-xl hover:bg-indigo-700 disabled:opacity-30 transition-all flex items-center gap-2" ${state.selectedColIdx === null ? 'disabled' : ''}>
+                                    <i data-lucide="hash" class="w-3 h-3"></i> ${t('map_id')}
+                                </button>
+                                <button onclick="assignMapping('ral')" class="px-5 py-2 bg-emerald-500 text-white text-[10px] font-black rounded-xl hover:bg-emerald-600 disabled:opacity-30 transition-all flex items-center gap-2" ${state.selectedColIdx === null ? 'disabled' : ''}>
+                                    <i data-lucide="palette" class="w-3 h-3"></i> ${t('map_ral')}
+                                </button>
+                                <div class="w-px h-8 bg-slate-200 mx-2"></div>
+                                <button onclick="toggleAllRows(true)" class="px-4 py-2 bg-slate-100 text-slate-600 text-[10px] font-black rounded-xl hover:bg-slate-200">${t('incl_all')}</button>
+                                <button onclick="toggleAllRows(false)" class="px-4 py-2 bg-slate-100 text-slate-600 text-[10px] font-black rounded-xl hover:bg-slate-200">${t('excl_all')}</button>
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-2 min-w-[240px]">
+                            <div class="flex items-center justify-between bg-indigo-50 px-4 py-2 rounded-xl border border-indigo-100 text-[10px]">
+                                <span class="font-black text-indigo-900 uppercase tracking-tighter">${t('mapped_id_label')}</span>
+                                <span class="font-bold text-indigo-600 truncate max-w-[120px]">${state.mapping.key !== null ? state.excelHeaders[state.mapping.key] : '--'}</span>
+                            </div>
+                            <div class="flex items-center justify-between bg-emerald-50 px-4 py-2 rounded-xl border border-emerald-100 text-[10px]">
+                                <span class="font-black text-emerald-900 uppercase tracking-tighter">${t('mapped_ral_label')}</span>
+                                <span class="font-bold text-emerald-600 truncate max-w-[120px]">${state.mapping.ral !== null ? state.excelHeaders[state.mapping.ral] : '--'}</span>
+                            </div>
+                            <button onclick="confirmVisualMapping()" class="mt-2 w-full py-3 bg-slate-900 text-white font-black rounded-xl hover:bg-slate-800 disabled:opacity-30 transition-all flex items-center justify-center gap-2 text-xs" ${state.mapping.key === null || state.mapping.ral === null ? 'disabled' : ''}>
+                                ${t('process_rows', { count: state.includedRows.size })}
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex-1 overflow-auto border-2 border-slate-100 rounded-2xl bg-white no-scrollbar select-none">
+                        <table class="excel-table">
+                            <thead class="sticky top-0 z-20">
+                                <tr class="header-row bg-slate-50">
+                                    <th class="excel-cell p-4 bg-slate-100 border-r border-slate-200 text-xs font-black text-slate-400 text-center w-14 sticky left-0 z-30">
+                                        <i data-lucide="check-square" class="w-4 h-4 mx-auto"></i>
+                                    </th>
+                                    ${state.excelHeaders.map((h, i) => `
+                                        <th onclick="selectColumn(${i})" class="excel-cell p-3 min-w-[200px] transition-all 
+                                            ${state.selectedColIdx === i ? 'header-active-selection' : 
+                                              state.mapping.key === i ? 'header-mapped-key' : 
+                                              state.mapping.ral === i ? 'header-mapped-ral' : 'text-slate-500'}">
+                                            <div class="flex flex-col">
+                                                <div class="text-[8px] font-black uppercase opacity-60">Col ${i+1}</div>
+                                                <div class="text-[10px] font-bold truncate mt-0.5">${h}</div>
+                                            </div>
+                                        </th>
+                                    `).join('')}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${state.rawExcelRows.map((row, rIdx) => {
+                                    return `
+                                    <tr class="transition-colors border-b border-slate-100 ${state.includedRows.has(rIdx) ? 'row-selected' : 'row-excluded'}" 
+                                        onclick="handleRowClick(event, ${rIdx})">
+                                        <td class="excel-cell p-3 bg-slate-50 border-r border-slate-200 text-center sticky left-0 z-10 cursor-pointer">
+                                            <input type="checkbox" ${state.includedRows.has(rIdx) ? 'checked' : ''} class="pointer-events-none">
+                                        </td>
+                                        ${Array.from({ length: numHeaders }).map((_, cIdx) => {
+                                            const cell = row[cIdx];
+                                            const content = (cell === undefined || cell === null || String(cell).trim() === '') ? '&nbsp;' : cell;
+                                            return `
+                                            <td onclick="selectColumn(${cIdx})" class="excel-cell p-3 text-[11px] font-medium text-slate-600 border-r border-slate-100 cursor-pointer transition-all
+                                                ${state.selectedColIdx === cIdx ? 'column-active-selection' : 
+                                                  state.mapping.key === cIdx ? 'column-mapped-key' : 
+                                                  state.mapping.ral === cIdx ? 'column-mapped-ral' : ''}">
+                                                ${content}
+                                            </td>`;
+                                        }).join('')}
+                                    </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+        }
+
+        const RAL_COLORS = { "1003": "#f3b500", "1018": "#f8f32b", "2004": "#e75b12", "2010": "#d84b20", "3000": "#af2b1e", "3020": "#cc0605", "5002": "#202060", "5010": "#0e4666", "5015": "#2674bb", "6005": "#0e4438", "6018": "#57a639", "7001": "#8c969d", "7011": "#434b4d", "7016": "#383e42", "7035": "#d7d7d7", "8017": "#45332b", "9001": "#f0ead6", "9003": "#f4f4f4", "9005": "#0a0a0a", "9010": "#f1f0ea", "9016": "#f6f6f6" };
+        function getHexFromRal(input) { if (!input) return "#ff0000"; const clean = String(input).toUpperCase().replace(/RAL\s*/i, '').trim(); return RAL_COLORS[clean] || ( /^#[0-9A-F]{6}$/i.test(clean) ? clean : "#ff0000"); }
+
+        function handleRowClick(event, rIdx) { if (event.target.tagName === 'TD' && event.target.cellIndex > 0) return; if (event.shiftKey && state.lastClickedRow !== null) { const start = Math.min(state.lastClickedRow, rIdx); const end = Math.max(state.lastClickedRow, rIdx); const isAdding = !state.includedRows.has(rIdx); for (let i = start; i <= end; i++) { if (isAdding) state.includedRows.add(i); else state.includedRows.delete(i); } } else { if (state.includedRows.has(rIdx)) state.includedRows.delete(rIdx); else state.includedRows.add(rIdx); } state.lastClickedRow = rIdx; render(); }
+        function toggleAllRows(select) { if (select) state.rawExcelRows.forEach((_, i) => state.includedRows.add(i)); else state.includedRows.clear(); render(); }
+        function selectColumn(idx) { state.selectedColIdx = idx; render(); }
+        function assignMapping(role) { if (state.selectedColIdx === null) return; state.mapping[role] = state.selectedColIdx; state.selectedColIdx = null; render(); }
+        function confirmVisualMapping() { state.excelData = state.rawExcelRows.filter((_, idx) => state.includedRows.has(idx)).map(r => { const rawVal = String(r[state.mapping.ral] || '').trim(); const cleanRal = rawVal.replace(/RAL\s*/i, '').trim(); return { key: String(r[state.mapping.key] || '').trim(), text: `RAL ${cleanRal}`, color: getHexFromRal(cleanRal) } }).filter(item => item.key && item.text); if (state.excelData.length === 0) { alert("Mapping failed."); return; } state.showMapper = false; goToStep(2); }
+
+        async function handleExcel(e) { const name = document.getElementById('project-name-input')?.value.trim(); if (!name) { alert(t('proj_label') + " required."); return; } state.projectName = name; const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (event) => { const workbook = XLSX.read(new Uint8Array(event.target.result), { type: 'array' }); const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 }); let maxCols = 0; rows.forEach(r => maxCols = Math.max(maxCols, r.length)); state.rawExcelRows = rows; state.excelHeaders = Array.from({ length: maxCols }).map((_, i) => rows[0] && rows[0][i] ? String(rows[0][i]).trim() : `Col ${i+1}`); state.includedRows = new Set(rows.map((_, i) => i).filter(i => i > 0)); state.showMapper = true; render(); }; reader.readAsArrayBuffer(file); }
+        function handlePdfs(e) { state.pdfFiles = [...state.pdfFiles, ...Array.from(e.target.files).filter(f => f.type === 'application/pdf')]; render(); }
+        function removePdf(idx) { state.pdfFiles.splice(idx, 1); render(); }
+        async function goToStep(num) { state.step = num; if (num === 3) performMatching(); if (num === 4) await generateDrawingPreview(); render(); }
+        function performMatching() { const fuse = new Fuse(state.pdfFiles, { keys: ['name'], threshold: 0.4 }); state.matches = state.excelData.map(item => { const exact = state.pdfFiles.find(f => f.name.toLowerCase().includes(item.key.toLowerCase())); if (exact) return { excel: item, file: exact, status: 'exact' }; const fuzzy = fuse.search(item.key); return fuzzy.length > 0 ? { excel: item, file: fuzzy[0].item, status: 'suggestion' } : { excel: item, file: null, status: 'missing' }; }); }
+        async function generateDrawingPreview() { if (state.pdfFiles.length === 0) return; const pdf = await pdfjsLib.getDocument({ data: await state.pdfFiles[0].arrayBuffer() }).promise; const page = await pdf.getPage(1); const viewport = page.getViewport({ scale: 1.2 }); const canvas = document.createElement('canvas'); canvas.height = viewport.height; canvas.width = viewport.width; await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise; state.previewImg = canvas.toDataURL(); }
+
+        let isDragging = false; function initDrag() { window.onmousemove = doDrag; window.onmouseup = stopDrag; }
+        function startDrag(e) { isDragging = true; e.preventDefault(); }
+        function stopDrag() { isDragging = false; }
+        function doDrag(e) { if (!isDragging) return; const rect = document.getElementById('drawing-container').getBoundingClientRect(); state.config.xPercent = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100)); state.config.yPercent = Math.max(0, Math.min(100, 100 - (((e.clientY - rect.top) / rect.height) * 100))); const el = document.getElementById('drag-text'); if (el) { el.style.left = `${state.config.xPercent}%`; el.style.top = `${100 - state.config.yPercent}%`; } const inputs = document.querySelectorAll('input[type="number"]'); if (inputs[0]) inputs[0].value = state.config.xPercent.toFixed(1); if (inputs[1]) inputs[1].value = state.config.yPercent.toFixed(1); }
+        function updateConfig(key, val) { state.config[key] = parseFloat(val); render(); }
+        function confirmMatch(idx) { state.matches[idx].status = 'confirmed'; render(); }
+        function removeMatch(idx) { state.matches[idx].file = null; state.matches[idx].status = 'missing'; render(); }
+        function getStatusBadge(m) { const base = "px-3 py-1 rounded-full text-[10px] font-black uppercase "; if (m.status === 'exact') return `<span class="${base} bg-emerald-100 text-emerald-700">${t('matched')}</span>`; if (m.status === 'suggestion') return `<span class="${base} bg-amber-100 text-amber-700">${t('suggested')}</span>`; return `<span class="${base} bg-slate-100 text-slate-400">${t('missing')}</span>`; }
+
+        async function renderReviewSamples() { const main = document.getElementById('main-content'); main.innerHTML = `<div class="bg-white p-8 rounded-3xl shadow-xl border border-slate-200"><div class="flex justify-between items-center mb-10"><h2 class="text-3xl font-black text-indigo-950 uppercase italic">${t('preflight')}</h2><button onclick="goToStep(6)" class="px-10 py-4 bg-indigo-600 text-white rounded-2xl font-black">${t('continue_finish')}</button></div><div id="samples-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div></div>`; const matched = state.matches.filter(m => m.file).slice(0, 5); for (let m of matched) { const url = await generateSamplePreview(m); document.getElementById('samples-container').innerHTML += `<div class="space-y-3"><div class="bg-slate-900 p-1 rounded-2xl shadow-lg overflow-hidden"><img src="${url}" class="w-full h-auto rounded-xl"></div><div class="font-black text-indigo-950 text-xs px-2 truncate">${m.file.name}</div></div>`; } }
+        async function generateSamplePreview(match) { const pdfDoc = await PDFLib.PDFDocument.load(await match.file.arrayBuffer()); const page = pdfDoc.getPages()[0]; const { width, height } = page.getSize(); const font = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold); page.drawText(match.excel.text, { x: (state.config.xPercent / 100) * width, y: (state.config.yPercent / 100) * height, size: state.config.fontSize, font, color: hexToRgb(match.excel.color) }); const pdf = await pdfjsLib.getDocument({ data: await pdfDoc.save() }).promise; const p = await pdf.getPage(1); const viewport = p.getViewport({ scale: 0.5 }); const canvas = document.createElement('canvas'); canvas.height = viewport.height; canvas.width = viewport.width; await p.render({ canvasContext: canvas.getContext('2d'), viewport }).promise; return canvas.toDataURL(); }
+        async function processBatch() { const overlay = document.getElementById('loading-overlay'); overlay.classList.remove('hidden'); try { const zip = new JSZip(); const matchedPairs = state.matches.filter(m => m.file); for (let i = 0; i < matchedPairs.length; i++) { const m = matchedPairs[i]; document.querySelector('[data-t="loading_msg"]').innerText = `${i+1}/${matchedPairs.length}: ${m.file.name}`; const pdfDoc = await PDFLib.PDFDocument.load(await m.file.arrayBuffer()); const font = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold); pdfDoc.getPages().forEach(p => { const { width, height } = p.getSize(); p.drawText(m.excel.text, { x: (state.config.xPercent / 100) * width, y: (state.config.yPercent / 100) * height, size: state.config.fontSize, font, color: hexToRgb(m.excel.color) }); }); zip.file(`${state.projectName} - ${m.file.name.replace('.pdf', '')} - ${m.excel.text}.pdf`, await pdfDoc.save()); } const content = await zip.generateAsync({ type: 'blob' }); const link = document.createElement('a'); link.href = URL.createObjectURL(content); link.download = `${state.projectName.replace(/\s+/g, '_')}_OVERLAYS.zip`; link.click(); } finally { overlay.classList.add('hidden'); } }
+        function hexToRgb(hex) { const r = parseInt(hex.slice(1, 3), 16) / 255; const g = parseInt(hex.slice(3, 5), 16) / 255; const b = parseInt(hex.slice(5, 7), 16) / 255; return PDFLib.rgb(r || 0, g || 0, b || 0); }
+        window.onload = render;
+    </script>
+</body>
+</html>
