@@ -101,6 +101,10 @@
         
         .preview-canvas-container { position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); background: white; margin: 0 auto; }
         .drag-handle { cursor: move; user-select: none; touch-action: none; position: absolute; white-space: nowrap; z-index: 40; }
+        .stamp-border {
+            border: 2px solid #0f172a !important;
+            border-radius: 8px;
+        }
         .step-active { background: var(--primary); color: white; transform: scale(1.1); box-shadow: 0 0 15px rgba(79, 70, 229, 0.4); }
         
         input[type="range"] { accent-color: var(--primary); cursor: pointer; }
@@ -231,6 +235,7 @@
                 font_size: "Font Size",
                 x_pos: "X-Pos (%)",
                 y_pos: "Y-Pos (%)",
+                stamp_border: "Stamp Border",
                 back: "BACK",
                 preview_samples: "PREVIEW SAMPLES",
                 drag_msg: "Move Anywhere",
@@ -282,6 +287,7 @@
                 font_size: "Tamaño de Fuente",
                 x_pos: "Posición X (%)",
                 y_pos: "Posición Y (%)",
+                stamp_border: "Borde del sello",
                 back: "VOLVER",
                 preview_samples: "VISTA PREVIA",
                 drag_msg: "Mover a cualquier lugar",
@@ -333,6 +339,7 @@
                 font_size: "Lettergrootte",
                 x_pos: "X-Positie (%)",
                 y_pos: "Y-Positie (%)",
+                stamp_border: "Stempelrand",
                 back: "TERUG",
                 preview_samples: "VOORBEELDEN BEKIJKEN",
                 drag_msg: "Overal naartoe slepen",
@@ -384,6 +391,7 @@
                 font_size: "Rozmiar czcionki",
                 x_pos: "Pozycja X (%)",
                 y_pos: "Pozycja Y (%)",
+                stamp_border: "Obramowanie stempla",
                 back: "POWRÓT",
                 preview_samples: "PODGLĄD PRÓBEK",
                 drag_msg: "Przesuń w dowolne miejsce",
@@ -425,7 +433,9 @@
             pdfFiles: [],
             matches: [],
             previewImg: null,
-            config: { xPercent: 10, yPercent: 10, fontSize: 32, opacity: 1.0 }
+            previewBaseWidth: null,
+            previewScale: 1,
+            config: { xPercent: 10, yPercent: 10, fontSize: 32, opacity: 1.0, stampBorderEnabled: true }
         };
 
         function t(key, params = {}) {
@@ -564,7 +574,8 @@
                             </div>
                         </div>`;
                     break;
-                case 4:
+                case 4: {
+                    const previewMetrics = getPreviewMetrics();
                     main.innerHTML = `
                         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in">
                             <div class="lg:col-span-4 space-y-6">
@@ -574,6 +585,10 @@
                                         <div>
                                             <div class="flex justify-between text-xs font-black text-slate-400 mb-3 tracking-widest uppercase">${t('font_size')} <span>${state.config.fontSize}pt</span></div>
                                             <input type="range" min="6" max="250" value="${state.config.fontSize}" oninput="updateConfig('fontSize', this.value)" class="w-full h-3 bg-slate-100 rounded-full appearance-none cursor-pointer">
+                                        </div>
+                                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex items-center justify-between">
+                                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">${t('stamp_border')}</label>
+                                            <input type="checkbox" class="h-5 w-5 accent-indigo-500" ${state.config.stampBorderEnabled ? 'checked' : ''} onchange="updateConfig('stampBorderEnabled', this.checked)">
                                         </div>
                                         <div class="grid grid-cols-2 gap-6">
                                             <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
@@ -595,8 +610,8 @@
                             <div class="lg:col-span-8 bg-slate-900 rounded-[40px] p-8 flex items-center justify-center min-h-[700px] overflow-hidden relative shadow-inner">
                                 <div id="drawing-container" class="preview-canvas-container" style="width: 100%; max-width: 900px;">
                                     <img src="${state.previewImg}" class="w-full h-auto rounded-sm block pointer-events-none" id="preview-drawing">
-                                    <div id="drag-text" class="drag-handle font-black px-2 border-2 border-dashed border-transparent hover:border-indigo-500 rounded flex flex-col items-center group transition-all"
-                                        style="left: ${state.config.xPercent}%; top: ${100 - state.config.yPercent}%; font-size: calc(${state.config.fontSize}px * 0.4); color: ${state.excelData[0]?.entries?.[0]?.color || '#0f172a'}; line-height: 1.2; transform: translate(-50%, -50%)"
+                                    <div id="drag-text" class="drag-handle font-black border-2 border-dashed border-transparent hover:border-indigo-500 rounded flex flex-col items-start group transition-all ${state.config.stampBorderEnabled ? 'stamp-border' : ''}"
+                                        style="left: ${state.config.xPercent}%; top: ${100 - state.config.yPercent}%; font-size: ${previewMetrics.fontSize}px; color: ${state.excelData[0]?.entries?.[0]?.color || '#0f172a'}; line-height: ${previewMetrics.lineHeight}px; transform: translate(0, -100%); padding: ${previewMetrics.padding}px ${previewMetrics.padding * 1.2}px; border-width: ${previewMetrics.borderWidth}px;"
                                         onmousedown="startDrag(event)">
                                         <div class="absolute -top-8 bg-indigo-600 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap uppercase tracking-widest">${t('drag_msg')}</div>
                                         ${getStampPreviewHtml(state.excelData[0])}
@@ -604,8 +619,12 @@
                                 </div>
                             </div>
                         </div>`;
-                    setTimeout(initDrag, 100);
+                    setTimeout(() => {
+                        initDrag();
+                        initPreviewScale();
+                    }, 100);
                     break;
+                }
                 case 5: renderReviewSamples(); break;
                 case 6:
                     main.innerHTML = `
@@ -728,8 +747,45 @@
         function buildStampLabel(item) { return item.entries.map(entry => `QTY ${formatQty(entry.qty)} - RAL ${entry.ral}`).join(', '); }
         function buildStampLines(item) { const lines = [{ text: state.projectName, color: PDFLib.rgb(0, 0, 0) }]; item.entries.forEach(entry => { lines.push({ text: `QTY ${formatQty(entry.qty)} - RAL ${entry.ral}`, color: hexToRgb(entry.color) }); }); return lines; }
         function getStampPreviewHtml(item) { if (!item) return 'RAL 2010'; return buildStampLines(item).map(line => line.text).join('<br>'); }
+        function getPreviewMetrics() {
+            const scale = state.previewScale || 1;
+            const fontSize = state.config.fontSize * scale;
+            const lineHeight = fontSize * 1.2;
+            const padding = state.config.stampBorderEnabled ? Math.max(4, fontSize * 0.25) : 0;
+            const borderWidth = state.config.stampBorderEnabled ? Math.max(1, fontSize * 0.08) : 2;
+            return { fontSize, lineHeight, padding, borderWidth };
+        }
         function sanitizeFileSegment(text) { return String(text).replace(/[\\/:*?"<>|]+/g, '').replace(/\s+/g, ' ').trim(); }
-        function drawStampOnPage(page, item, font) { const { width, height } = page.getSize(); const x = (state.config.xPercent / 100) * width; const y = (state.config.yPercent / 100) * height; const lineHeight = state.config.fontSize * 1.2; const lines = buildStampLines(item); lines.forEach((line, index) => { page.drawText(line.text, { x, y: y - (lineHeight * index), size: state.config.fontSize, font, color: line.color }); }); }
+        function getStampMetrics(item, font) {
+            const fontSize = state.config.fontSize;
+            const lineHeight = fontSize * 1.2;
+            const lines = buildStampLines(item);
+            const widths = lines.map(line => font.widthOfTextAtSize(line.text, fontSize));
+            const maxWidth = widths.length ? Math.max(...widths) : 0;
+            const textHeight = fontSize + lineHeight * (lines.length - 1);
+            return { lines, fontSize, lineHeight, maxWidth, textHeight };
+        }
+        function drawStampOnPage(page, item, font) {
+            const { width, height } = page.getSize();
+            const x = (state.config.xPercent / 100) * width;
+            const y = (state.config.yPercent / 100) * height;
+            const { lines, fontSize, lineHeight, maxWidth, textHeight } = getStampMetrics(item, font);
+            if (state.config.stampBorderEnabled) {
+                const padding = Math.max(2, fontSize * 0.25);
+                const borderWidth = Math.max(0.5, fontSize * 0.08);
+                page.drawRectangle({
+                    x: x - padding,
+                    y: y - lineHeight * (lines.length - 1) - padding,
+                    width: maxWidth + padding * 2,
+                    height: textHeight + padding * 2,
+                    borderColor: PDFLib.rgb(0, 0, 0),
+                    borderWidth
+                });
+            }
+            lines.forEach((line, index) => {
+                page.drawText(line.text, { x, y: y - (lineHeight * index), size: fontSize, font, color: line.color });
+            });
+        }
 
         function handleRowClick(event, rIdx) { if (event.target.tagName === 'TD' && event.target.cellIndex > 0) return; if (event.shiftKey && state.lastClickedRow !== null) { const start = Math.min(state.lastClickedRow, rIdx); const end = Math.max(state.lastClickedRow, rIdx); const isAdding = !state.includedRows.has(rIdx); for (let i = start; i <= end; i++) { if (isAdding) state.includedRows.add(i); else state.includedRows.delete(i); } } else { if (state.includedRows.has(rIdx)) state.includedRows.delete(rIdx); else state.includedRows.add(rIdx); } state.lastClickedRow = rIdx; render(); }
         function toggleAllRows(select) { if (select) state.rawExcelRows.forEach((_, i) => state.includedRows.add(i)); else state.includedRows.clear(); render(); }
@@ -770,13 +826,86 @@
         function removePdf(idx) { state.pdfFiles.splice(idx, 1); render(); }
         async function goToStep(num) { state.step = num; if (num === 3) performMatching(); if (num === 4) await generateDrawingPreview(); render(); }
         function performMatching() { const fuse = new Fuse(state.pdfFiles, { keys: ['name'], threshold: 0.4 }); state.matches = state.excelData.map(item => { const exact = state.pdfFiles.find(f => f.name.toLowerCase().includes(item.key.toLowerCase())); if (exact) return { excel: item, file: exact, status: 'exact' }; const fuzzy = fuse.search(item.key); return fuzzy.length > 0 ? { excel: item, file: fuzzy[0].item, status: 'suggestion' } : { excel: item, file: null, status: 'missing' }; }); }
-        async function generateDrawingPreview() { if (state.pdfFiles.length === 0) return; const pdf = await pdfjsLib.getDocument({ data: await state.pdfFiles[0].arrayBuffer() }).promise; const page = await pdf.getPage(1); const viewport = page.getViewport({ scale: 1.2 }); const canvas = document.createElement('canvas'); canvas.height = viewport.height; canvas.width = viewport.width; await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise; state.previewImg = canvas.toDataURL(); }
+        async function generateDrawingPreview() {
+            if (state.pdfFiles.length === 0) return;
+            const pdf = await pdfjsLib.getDocument({ data: await state.pdfFiles[0].arrayBuffer() }).promise;
+            const page = await pdf.getPage(1);
+            const baseViewport = page.getViewport({ scale: 1 });
+            state.previewBaseWidth = baseViewport.width;
+            const viewport = page.getViewport({ scale: 1.2 });
+            const canvas = document.createElement('canvas');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+            state.previewImg = canvas.toDataURL();
+        }
 
-        let isDragging = false; function initDrag() { window.onmousemove = doDrag; window.onmouseup = stopDrag; }
-        function startDrag(e) { isDragging = true; e.preventDefault(); }
+        let isDragging = false;
+        let dragOffset = { x: 0, y: 0 };
+        let previewResizeObserver = null;
+        function initDrag() { window.onmousemove = doDrag; window.onmouseup = stopDrag; }
+        function initPreviewScale() {
+            updatePreviewScale();
+            const container = document.getElementById('drawing-container');
+            if (!container) return;
+            if (previewResizeObserver) previewResizeObserver.disconnect();
+            previewResizeObserver = new ResizeObserver(() => updatePreviewScale());
+            previewResizeObserver.observe(container);
+            const img = document.getElementById('preview-drawing');
+            if (img) img.onload = updatePreviewScale;
+        }
+        function updatePreviewScale() {
+            const img = document.getElementById('preview-drawing');
+            if (!img || !state.previewBaseWidth) return;
+            const scale = img.clientWidth / state.previewBaseWidth;
+            if (!Number.isFinite(scale) || scale <= 0) return;
+            state.previewScale = scale;
+            applyPreviewScale();
+        }
+        function applyPreviewScale() {
+            const el = document.getElementById('drag-text');
+            if (!el) return;
+            const metrics = getPreviewMetrics();
+            el.style.fontSize = `${metrics.fontSize}px`;
+            el.style.lineHeight = `${metrics.lineHeight}px`;
+            if (state.config.stampBorderEnabled) {
+                el.style.padding = `${metrics.padding}px ${metrics.padding * 1.2}px`;
+                el.style.borderWidth = `${metrics.borderWidth}px`;
+            } else {
+                el.style.padding = '0';
+                el.style.borderWidth = '';
+            }
+        }
+        function startDrag(e) {
+            const el = document.getElementById('drag-text');
+            if (el) {
+                const rect = el.getBoundingClientRect();
+                dragOffset = { x: e.clientX - rect.left, y: e.clientY - rect.bottom };
+            }
+            isDragging = true;
+            e.preventDefault();
+        }
         function stopDrag() { isDragging = false; }
-        function doDrag(e) { if (!isDragging) return; const rect = document.getElementById('drawing-container').getBoundingClientRect(); state.config.xPercent = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100)); state.config.yPercent = Math.max(0, Math.min(100, 100 - (((e.clientY - rect.top) / rect.height) * 100))); const el = document.getElementById('drag-text'); if (el) { el.style.left = `${state.config.xPercent}%`; el.style.top = `${100 - state.config.yPercent}%`; } const inputs = document.querySelectorAll('input[type="number"]'); if (inputs[0]) inputs[0].value = state.config.xPercent.toFixed(1); if (inputs[1]) inputs[1].value = state.config.yPercent.toFixed(1); }
-        function updateConfig(key, val) { state.config[key] = parseFloat(val); render(); }
+        function doDrag(e) {
+            if (!isDragging) return;
+            const rect = document.getElementById('drawing-container').getBoundingClientRect();
+            const anchorX = e.clientX - dragOffset.x;
+            const anchorY = e.clientY - dragOffset.y;
+            state.config.xPercent = Math.max(0, Math.min(100, ((anchorX - rect.left) / rect.width) * 100));
+            state.config.yPercent = Math.max(0, Math.min(100, 100 - (((anchorY - rect.top) / rect.height) * 100)));
+            const el = document.getElementById('drag-text');
+            if (el) {
+                el.style.left = `${state.config.xPercent}%`;
+                el.style.top = `${100 - state.config.yPercent}%`;
+            }
+            const inputs = document.querySelectorAll('input[type="number"]');
+            if (inputs[0]) inputs[0].value = state.config.xPercent.toFixed(1);
+            if (inputs[1]) inputs[1].value = state.config.yPercent.toFixed(1);
+        }
+        function updateConfig(key, val) {
+            state.config[key] = typeof val === 'boolean' ? val : parseFloat(val);
+            render();
+        }
         function confirmMatch(idx) { state.matches[idx].status = 'confirmed'; render(); }
         function removeMatch(idx) { state.matches[idx].file = null; state.matches[idx].status = 'missing'; render(); }
         function getStatusBadge(m) { const base = "px-3 py-1 rounded-full text-[10px] font-black uppercase "; if (m.status === 'exact') return `<span class="${base} bg-emerald-100 text-emerald-700">${t('matched')}</span>`; if (m.status === 'suggestion') return `<span class="${base} bg-amber-100 text-amber-700">${t('suggested')}</span>`; return `<span class="${base} bg-slate-100 text-slate-400">${t('missing')}</span>`; }
