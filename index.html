@@ -747,12 +747,18 @@
         function buildStampLabel(item) { return item.entries.map(entry => `QTY ${formatQty(entry.qty)} - RAL ${entry.ral}`).join(', '); }
         function buildStampLines(item) { const lines = [{ text: state.projectName, color: PDFLib.rgb(0, 0, 0) }]; item.entries.forEach(entry => { lines.push({ text: `QTY ${formatQty(entry.qty)} - RAL ${entry.ral}`, color: hexToRgb(entry.color) }); }); return lines; }
         function getStampPreviewHtml(item) { if (!item) return 'RAL 2010'; return buildStampLines(item).map(line => line.text).join('<br>'); }
+        function getStampStyle(fontSize) {
+            if (!state.config.stampBorderEnabled) return { padding: 0, borderWidth: 0 };
+            return {
+                padding: Math.max(4, fontSize * 0.25),
+                borderWidth: Math.max(1, fontSize * 0.08)
+            };
+        }
         function getPreviewMetrics() {
             const scale = state.previewScale || 1;
             const fontSize = state.config.fontSize * scale;
             const lineHeight = fontSize * 1.2;
-            const padding = state.config.stampBorderEnabled ? Math.max(4, fontSize * 0.25) : 0;
-            const borderWidth = state.config.stampBorderEnabled ? Math.max(1, fontSize * 0.08) : 2;
+            const { padding, borderWidth } = getStampStyle(fontSize);
             return { fontSize, lineHeight, padding, borderWidth };
         }
         function sanitizeFileSegment(text) { return String(text).replace(/[\\/:*?"<>|]+/g, '').replace(/\s+/g, ' ').trim(); }
@@ -762,28 +768,28 @@
             const lines = buildStampLines(item);
             const widths = lines.map(line => font.widthOfTextAtSize(line.text, fontSize));
             const maxWidth = widths.length ? Math.max(...widths) : 0;
-            const textHeight = fontSize + lineHeight * (lines.length - 1);
-            return { lines, fontSize, lineHeight, maxWidth, textHeight };
+            const textHeight = lineHeight * lines.length;
+            const { padding, borderWidth } = getStampStyle(fontSize);
+            return { lines, fontSize, lineHeight, maxWidth, textHeight, padding, borderWidth };
         }
         function drawStampOnPage(page, item, font) {
             const { width, height } = page.getSize();
             const x = (state.config.xPercent / 100) * width;
-            const y = (state.config.yPercent / 100) * height;
-            const { lines, fontSize, lineHeight, maxWidth, textHeight } = getStampMetrics(item, font);
+            const yAnchor = (state.config.yPercent / 100) * height;
+            const { lines, fontSize, lineHeight, maxWidth, textHeight, padding, borderWidth } = getStampMetrics(item, font);
             if (state.config.stampBorderEnabled) {
-                const padding = Math.max(2, fontSize * 0.25);
-                const borderWidth = Math.max(0.5, fontSize * 0.08);
                 page.drawRectangle({
                     x: x - padding,
-                    y: y - lineHeight * (lines.length - 1) - padding,
+                    y: yAnchor,
                     width: maxWidth + padding * 2,
                     height: textHeight + padding * 2,
                     borderColor: PDFLib.rgb(0, 0, 0),
                     borderWidth
                 });
             }
+            const baseY = yAnchor + padding + lineHeight * (lines.length - 1);
             lines.forEach((line, index) => {
-                page.drawText(line.text, { x, y: y - (lineHeight * index), size: fontSize, font, color: line.color });
+                page.drawText(line.text, { x, y: baseY - (lineHeight * index), size: fontSize, font, color: line.color });
             });
         }
 
