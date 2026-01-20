@@ -149,12 +149,16 @@
 
         .column-active-selection { background-color: rgba(79, 70, 229, 0.1); outline: 2px solid var(--primary); outline-offset: -2px; z-index: 10; }
         .column-mapped-key { background-color: rgba(79, 70, 229, 0.05); border-left: 2px solid var(--primary) !important; border-right: 2px solid var(--primary) !important; }
-        .column-mapped-ral { background-color: rgba(16, 185, 129, 0.05); border-left: 2px solid var(--emerald) !important; border-right: 2px solid var(--emerald) !important; }
+        .column-mapped-element { background-color: rgba(96, 165, 250, 0.08); border-left: 2px solid #38bdf8 !important; border-right: 2px solid #38bdf8 !important; }
+        .column-mapped-gel { background-color: rgba(16, 185, 129, 0.05); border-left: 2px solid var(--emerald) !important; border-right: 2px solid var(--emerald) !important; }
+        .column-mapped-top { background-color: rgba(14, 116, 144, 0.08); border-left: 2px solid #0ea5e9 !important; border-right: 2px solid #0ea5e9 !important; }
         .column-mapped-qty { background-color: rgba(251, 191, 36, 0.08); border-left: 2px solid var(--amber) !important; border-right: 2px solid var(--amber) !important; }
         
         .header-active-selection { background-color: var(--primary) !important; color: white !important; }
         .header-mapped-key { background-color: var(--primary) !important; color: white !important; }
-        .header-mapped-ral { background-color: var(--emerald) !important; color: white !important; }
+        .header-mapped-element { background-color: #38bdf8 !important; color: white !important; }
+        .header-mapped-gel { background-color: var(--emerald) !important; color: white !important; }
+        .header-mapped-top { background-color: #0ea5e9 !important; color: white !important; }
         .header-mapped-qty { background-color: var(--amber) !important; color: white !important; }
         
         tr.header-row th { cursor: pointer; transition: background 0.2s; border-right: 1px solid #cbd5e1; }
@@ -227,7 +231,7 @@
                 match_files: "Match Files",
                 match_review: "Match Review",
                 setup_layout: "Setup Layout",
-                col_id: "Excel Part ID",
+                col_id: "Excel Drawing ID",
                 col_drawing: "Identified Drawing",
                 col_status: "Status",
                 col_actions: "Actions",
@@ -246,8 +250,10 @@
                 generate_batch: "GENERATE BATCH (.ZIP)",
                 clean_map: "Clean & Map Specs",
                 clean_map_desc: "Select columns, then uncheck any non-data rows to exclude them.",
-                map_id: "MAP PART ID",
-                map_ral: "MAP RAL",
+                map_id: "MAP DRAWING ID",
+                map_element: "MAP ELEMENT NO.",
+                map_gel: "MAP GEL COAT RAL",
+                map_top: "MAP TOP COAT RAL",
                 map_qty: "MAP QTY",
                 incl_all: "INCL. ALL",
                 excl_all: "EXCL. ALL",
@@ -255,8 +261,10 @@
                 matched: "Matched",
                 suggested: "Suggested",
                 missing: "Missing",
-                mapped_id_label: "Part ID Col:",
-                mapped_ral_label: "RAL Col:",
+                mapped_id_label: "Drawing ID Col:",
+                mapped_element_label: "Element Col:",
+                mapped_gel_label: "Gel Coat Col:",
+                mapped_top_label: "Top Coat Col:",
                 mapped_qty_label: "Qty Col:",
                 proj_placeholder: "e.g. LACO GLANERBROOK"
             },
@@ -279,7 +287,7 @@
                 match_files: "Vincular Archivos",
                 match_review: "Revisión de Vínculos",
                 setup_layout: "Configurar Diseño",
-                col_id: "ID de Pieza Excel",
+                col_id: "ID de Plano Excel",
                 col_drawing: "Plano Identificado",
                 col_status: "Estado",
                 col_actions: "Acciones",
@@ -298,8 +306,10 @@
                 generate_batch: "GENERAR LOTE (.ZIP)",
                 clean_map: "Limpiar y Mapear Datos",
                 clean_map_desc: "Seleccione las columnas y desmarque las filas que no sean datos.",
-                map_id: "MAPEAR ID PIEZA",
-                map_ral: "MAPEAR RAL",
+                map_id: "MAPEAR ID PLANO",
+                map_element: "MAPEAR ELEMENTO",
+                map_gel: "MAPEAR RAL GEL COAT",
+                map_top: "MAPEAR RAL TOP COAT",
                 map_qty: "MAPEAR CANT.",
                 incl_all: "INCL. TODO",
                 excl_all: "EXCL. TODO",
@@ -307,8 +317,10 @@
                 matched: "Emparejado",
                 suggested: "Sugerido",
                 missing: "Faltante",
-                mapped_id_label: "Col. ID Pieza:",
-                mapped_ral_label: "Col. RAL:",
+                mapped_id_label: "Col. ID Plano:",
+                mapped_element_label: "Col. Elemento:",
+                mapped_gel_label: "Col. Gel Coat:",
+                mapped_top_label: "Col. Top Coat:",
                 mapped_qty_label: "Col. Cant.:",
                 proj_placeholder: "ej. LACO GLANERBROOK"
             },
@@ -331,7 +343,7 @@
                 match_files: "Bestanden Koppelen",
                 match_review: "Koppelingscontrole",
                 setup_layout: "Layout Instellen",
-                col_id: "Excel Onderdeel ID",
+                col_id: "Excel Tekening ID",
                 col_drawing: "Geïdentificeerde Tekening",
                 col_status: "Status",
                 col_actions: "Acties",
@@ -350,8 +362,10 @@
                 generate_batch: "BATCH GENEREREN (.ZIP)",
                 clean_map: "Data Schonen & Koppelen",
                 clean_map_desc: "Selecteer kolommen en vink rijen uit die geen data bevatten.",
-                map_id: "KOPPEL ONDERDEEL ID",
-                map_ral: "KOPPEL RAL",
+                map_id: "KOPPEL TEKENING ID",
+                map_element: "KOPPEL ELEMENTNR.",
+                map_gel: "KOPPEL GELCOAT RAL",
+                map_top: "KOPPEL TOPCOAT RAL",
                 map_qty: "KOPPEL AANTAL",
                 incl_all: "ALLES INCL.",
                 excl_all: "ALLES EXCL.",
@@ -359,8 +373,10 @@
                 matched: "Gekoppeld",
                 suggested: "Suggestie",
                 missing: "Ontbreekt",
-                mapped_id_label: "Kol. Onderdeel ID:",
-                mapped_ral_label: "Kol. RAL:",
+                mapped_id_label: "Kol. Tekening ID:",
+                mapped_element_label: "Kol. Element:",
+                mapped_gel_label: "Kol. Gelcoat:",
+                mapped_top_label: "Kol. Topcoat:",
                 mapped_qty_label: "Kol. Aantal:",
                 proj_placeholder: "bijv. LACO GLANERBROOK"
             },
@@ -383,7 +399,7 @@
                 match_files: "Dopasuj pliki",
                 match_review: "Przegląd dopasowań",
                 setup_layout: "Ustaw układ",
-                col_id: "ID części Excel",
+                col_id: "ID rysunku Excel",
                 col_drawing: "Zidentyfikowany rysunek",
                 col_status: "Status",
                 col_actions: "Akcje",
@@ -402,8 +418,10 @@
                 generate_batch: "GENERUJ PARTIĘ (.ZIP)",
                 clean_map: "Oczyść i mapuj dane",
                 clean_map_desc: "Wybierz kolumny, a następnie odznacz wiersze, które nie są danymi.",
-                map_id: "MAPUJ ID CZĘŚCI",
-                map_ral: "MAPUJ RAL",
+                map_id: "MAPUJ ID RYSUNKU",
+                map_element: "MAPUJ ELEMENT",
+                map_gel: "MAPUJ RAL ŻELCOAT",
+                map_top: "MAPUJ RAL TOPCOAT",
                 map_qty: "MAPUJ ILOŚĆ",
                 incl_all: "WŁĄCZ WSZYSTKIE",
                 excl_all: "WYŁĄCZ WSZYSTKIE",
@@ -411,8 +429,10 @@
                 matched: "Dopasowano",
                 suggested: "Sugerowane",
                 missing: "Brak",
-                mapped_id_label: "Kol. ID części:",
-                mapped_ral_label: "Kol. RAL:",
+                mapped_id_label: "Kol. ID rysunku:",
+                mapped_element_label: "Kol. Element:",
+                mapped_gel_label: "Kol. Żelcoat:",
+                mapped_top_label: "Kol. Topcoat:",
                 mapped_qty_label: "Kol. Ilość:",
                 proj_placeholder: "np. LACO GLANERBROOK"
             }
@@ -425,7 +445,7 @@
             excelData: [],
             rawExcelRows: [],
             excelHeaders: [],
-            mapping: { key: null, ral: null, qty: null },
+            mapping: { key: null, element: null, gel: null, top: null, qty: null },
             selectedColIdx: null,
             includedRows: new Set(),
             lastClickedRow: null,
@@ -660,8 +680,14 @@
                                 <button onclick="assignMapping('key')" class="px-5 py-2 bg-indigo-600 text-white text-[10px] font-black rounded-xl hover:bg-indigo-700 disabled:opacity-30 transition-all flex items-center gap-2" ${state.selectedColIdx === null ? 'disabled' : ''}>
                                     <i data-lucide="hash" class="w-3 h-3"></i> ${t('map_id')}
                                 </button>
-                                <button onclick="assignMapping('ral')" class="px-5 py-2 bg-emerald-500 text-white text-[10px] font-black rounded-xl hover:bg-emerald-600 disabled:opacity-30 transition-all flex items-center gap-2" ${state.selectedColIdx === null ? 'disabled' : ''}>
-                                    <i data-lucide="palette" class="w-3 h-3"></i> ${t('map_ral')}
+                                <button onclick="assignMapping('element')" class="px-5 py-2 bg-sky-500 text-white text-[10px] font-black rounded-xl hover:bg-sky-600 disabled:opacity-30 transition-all flex items-center gap-2" ${state.selectedColIdx === null ? 'disabled' : ''}>
+                                    <i data-lucide="layers" class="w-3 h-3"></i> ${t('map_element')}
+                                </button>
+                                <button onclick="assignMapping('gel')" class="px-5 py-2 bg-emerald-500 text-white text-[10px] font-black rounded-xl hover:bg-emerald-600 disabled:opacity-30 transition-all flex items-center gap-2" ${state.selectedColIdx === null ? 'disabled' : ''}>
+                                    <i data-lucide="droplets" class="w-3 h-3"></i> ${t('map_gel')}
+                                </button>
+                                <button onclick="assignMapping('top')" class="px-5 py-2 bg-sky-500 text-white text-[10px] font-black rounded-xl hover:bg-sky-600 disabled:opacity-30 transition-all flex items-center gap-2" ${state.selectedColIdx === null ? 'disabled' : ''}>
+                                    <i data-lucide="paintbrush" class="w-3 h-3"></i> ${t('map_top')}
                                 </button>
                                 <button onclick="assignMapping('qty')" class="px-5 py-2 bg-amber-400 text-white text-[10px] font-black rounded-xl hover:bg-amber-500 disabled:opacity-30 transition-all flex items-center gap-2" ${state.selectedColIdx === null ? 'disabled' : ''}>
                                     <i data-lucide="layers" class="w-3 h-3"></i> ${t('map_qty')}
@@ -676,15 +702,23 @@
                                 <span class="font-black text-indigo-900 uppercase tracking-tighter">${t('mapped_id_label')}</span>
                                 <span class="font-bold text-indigo-600 truncate max-w-[120px]">${state.mapping.key !== null ? state.excelHeaders[state.mapping.key] : '--'}</span>
                             </div>
+                            <div class="flex items-center justify-between bg-sky-50 px-4 py-2 rounded-xl border border-sky-100 text-[10px]">
+                                <span class="font-black text-sky-900 uppercase tracking-tighter">${t('mapped_element_label')}</span>
+                                <span class="font-bold text-sky-600 truncate max-w-[120px]">${state.mapping.element !== null ? state.excelHeaders[state.mapping.element] : '--'}</span>
+                            </div>
                             <div class="flex items-center justify-between bg-emerald-50 px-4 py-2 rounded-xl border border-emerald-100 text-[10px]">
-                                <span class="font-black text-emerald-900 uppercase tracking-tighter">${t('mapped_ral_label')}</span>
-                                <span class="font-bold text-emerald-600 truncate max-w-[120px]">${state.mapping.ral !== null ? state.excelHeaders[state.mapping.ral] : '--'}</span>
+                                <span class="font-black text-emerald-900 uppercase tracking-tighter">${t('mapped_gel_label')}</span>
+                                <span class="font-bold text-emerald-600 truncate max-w-[120px]">${state.mapping.gel !== null ? state.excelHeaders[state.mapping.gel] : '--'}</span>
+                            </div>
+                            <div class="flex items-center justify-between bg-sky-50 px-4 py-2 rounded-xl border border-sky-100 text-[10px]">
+                                <span class="font-black text-sky-900 uppercase tracking-tighter">${t('mapped_top_label')}</span>
+                                <span class="font-bold text-sky-600 truncate max-w-[120px]">${state.mapping.top !== null ? state.excelHeaders[state.mapping.top] : '--'}</span>
                             </div>
                             <div class="flex items-center justify-between bg-amber-50 px-4 py-2 rounded-xl border border-amber-100 text-[10px]">
                                 <span class="font-black text-amber-900 uppercase tracking-tighter">${t('mapped_qty_label')}</span>
                                 <span class="font-bold text-amber-600 truncate max-w-[120px]">${state.mapping.qty !== null ? state.excelHeaders[state.mapping.qty] : '--'}</span>
                             </div>
-                            <button onclick="confirmVisualMapping()" class="mt-2 w-full py-3 bg-slate-900 text-white font-black rounded-xl hover:bg-slate-800 disabled:opacity-30 transition-all flex items-center justify-center gap-2 text-xs" ${state.mapping.key === null || state.mapping.ral === null || state.mapping.qty === null ? 'disabled' : ''}>
+                            <button onclick="confirmVisualMapping()" class="mt-2 w-full py-3 bg-slate-900 text-white font-black rounded-xl hover:bg-slate-800 disabled:opacity-30 transition-all flex items-center justify-center gap-2 text-xs" ${state.mapping.key === null || state.mapping.gel === null || state.mapping.top === null || state.mapping.qty === null ? 'disabled' : ''}>
                                 ${t('process_rows', { count: state.includedRows.size })}
                             </button>
                         </div>
@@ -700,7 +734,9 @@
                                         <th onclick="selectColumn(${i})" class="excel-cell p-3 min-w-[200px] transition-all 
                                             ${state.selectedColIdx === i ? 'header-active-selection' : 
                                               state.mapping.key === i ? 'header-mapped-key' : 
-                                              state.mapping.ral === i ? 'header-mapped-ral' : 
+                                              state.mapping.element === i ? 'header-mapped-element' : 
+                                              state.mapping.gel === i ? 'header-mapped-gel' : 
+                                              state.mapping.top === i ? 'header-mapped-top' : 
                                               state.mapping.qty === i ? 'header-mapped-qty' : 'text-slate-500'}">
                                             <div class="flex flex-col">
                                                 <div class="text-[8px] font-black uppercase opacity-60">Col ${i+1}</div>
@@ -725,7 +761,9 @@
                                             <td onclick="selectColumn(${cIdx})" class="excel-cell p-3 text-[11px] font-medium text-slate-600 border-r border-slate-100 cursor-pointer transition-all
                                                 ${state.selectedColIdx === cIdx ? 'column-active-selection' : 
                                                   state.mapping.key === cIdx ? 'column-mapped-key' : 
-                                                  state.mapping.ral === cIdx ? 'column-mapped-ral' : 
+                                                  state.mapping.element === cIdx ? 'column-mapped-element' : 
+                                                  state.mapping.gel === cIdx ? 'column-mapped-gel' : 
+                                                  state.mapping.top === cIdx ? 'column-mapped-top' : 
                                                   state.mapping.qty === cIdx ? 'column-mapped-qty' : ''}">
                                                 ${content}
                                             </td>`;
@@ -744,8 +782,18 @@
         function parseQty(input) { if (input === undefined || input === null) return null; const raw = String(input).trim(); if (!raw) return null; const normalized = raw.replace(',', '.'); const num = Number(normalized); return Number.isFinite(num) ? num : raw; }
         function formatQty(value) { if (value === undefined || value === null || value === '') return '1'; if (typeof value === 'number') return Number.isInteger(value) ? String(value) : String(value); return String(value); }
         function mergeQty(existing, next) { if (typeof existing === 'number' && typeof next === 'number') return existing + next; if (next === null || next === undefined || next === '') return existing; if (existing === null || existing === undefined || existing === '') return next; return `${formatQty(existing)}+${formatQty(next)}`; }
-        function buildStampLabel(item) { return item.entries.map(entry => `QTY ${formatQty(entry.qty)} - RAL ${entry.ral}`).join(', '); }
-        function buildStampLines(item) { const lines = [{ text: state.projectName, color: PDFLib.rgb(0, 0, 0) }]; item.entries.forEach(entry => { lines.push({ text: `QTY ${formatQty(entry.qty)} - RAL ${entry.ral}`, color: hexToRgb(entry.color) }); }); return lines; }
+        function buildEntryLabel(entry) {
+            const elementSegment = entry.element ? `EL ${entry.element} - ` : '';
+            const gelSegment = entry.gelRal ? `GEL ${entry.gelRal}` : 'GEL --';
+            const topSegment = entry.topRal ? `TOP ${entry.topRal}` : 'TOP --';
+            return `${elementSegment}QTY ${formatQty(entry.qty)} - ${gelSegment} / ${topSegment}`;
+        }
+        function buildStampLabel(item) { return item.entries.map(entry => buildEntryLabel(entry)).join(', '); }
+        function buildStampLines(item) {
+            const lines = [{ text: state.projectName, color: PDFLib.rgb(0, 0, 0) }];
+            item.entries.forEach(entry => { lines.push({ text: buildEntryLabel(entry), color: hexToRgb(entry.color) }); });
+            return lines;
+        }
         function getStampPreviewHtml(item) { if (!item) return 'RAL 2010'; return buildStampLines(item).map(line => line.text).join('<br>'); }
         function getStampStyle(fontSize) {
             if (!state.config.stampBorderEnabled) return { padding: 0, borderWidth: 0 };
@@ -803,19 +851,30 @@
                 .filter((_, idx) => state.includedRows.has(idx))
                 .forEach(row => {
                     const key = String(row[state.mapping.key] || '').trim();
-                    const rawRal = String(row[state.mapping.ral] || '').trim();
-                    const cleanRal = rawRal.replace(/RAL\s*/i, '').trim();
-                    if (!key || !cleanRal) return;
+                    const element = state.mapping.element !== null ? String(row[state.mapping.element] || '').trim() : '';
+                    const rawGel = String(row[state.mapping.gel] || '').trim();
+                    const rawTop = String(row[state.mapping.top] || '').trim();
+                    const cleanGel = rawGel.replace(/RAL\s*/i, '').trim();
+                    const cleanTop = rawTop.replace(/RAL\s*/i, '').trim();
+                    if (!key || (!cleanGel && !cleanTop)) return;
                     const qtyValue = parseQty(row[state.mapping.qty]);
                     if (!grouped.has(key)) {
                         grouped.set(key, { key, entries: new Map() });
                     }
                     const group = grouped.get(key);
-                    const existing = group.entries.get(cleanRal);
+                    const entryKey = `${element}||${cleanGel}||${cleanTop}`;
+                    const existing = group.entries.get(entryKey);
                     if (existing) {
                         existing.qty = mergeQty(existing.qty, qtyValue ?? 1);
                     } else {
-                        group.entries.set(cleanRal, { ral: cleanRal, qty: qtyValue ?? 1, color: getHexFromRal(cleanRal) });
+                        const displayColor = cleanTop || cleanGel;
+                        group.entries.set(entryKey, {
+                            element,
+                            gelRal: cleanGel,
+                            topRal: cleanTop,
+                            qty: qtyValue ?? 1,
+                            color: getHexFromRal(displayColor)
+                        });
                     }
                 });
             state.excelData = Array.from(grouped.values()).map(item => {
@@ -918,7 +977,7 @@
 
         async function renderReviewSamples() { const main = document.getElementById('main-content'); main.innerHTML = `<div class="bg-white p-8 rounded-3xl shadow-xl border border-slate-200"><div class="flex justify-between items-center mb-10"><h2 class="text-3xl font-black text-indigo-950 uppercase italic">${t('preflight')}</h2><button onclick="goToStep(6)" class="px-10 py-4 bg-indigo-600 text-white rounded-2xl font-black">${t('continue_finish')}</button></div><div id="samples-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div></div>`; const matched = state.matches.filter(m => m.file).slice(0, 5); for (let m of matched) { const url = await generateSamplePreview(m); document.getElementById('samples-container').innerHTML += `<div class="space-y-3"><div class="bg-slate-900 p-1 rounded-2xl shadow-lg overflow-hidden"><img src="${url}" class="w-full h-auto rounded-xl"></div><div class="font-black text-indigo-950 text-xs px-2 truncate">${m.file.name}</div></div>`; } }
         async function generateSamplePreview(match) { const pdfDoc = await PDFLib.PDFDocument.load(await match.file.arrayBuffer()); const page = pdfDoc.getPages()[0]; const font = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold); drawStampOnPage(page, match.excel, font); const pdf = await pdfjsLib.getDocument({ data: await pdfDoc.save() }).promise; const p = await pdf.getPage(1); const viewport = p.getViewport({ scale: 0.5 }); const canvas = document.createElement('canvas'); canvas.height = viewport.height; canvas.width = viewport.width; await p.render({ canvasContext: canvas.getContext('2d'), viewport }).promise; return canvas.toDataURL(); }
-        async function processBatch() { const overlay = document.getElementById('loading-overlay'); overlay.classList.remove('hidden'); try { const zip = new JSZip(); const matchedPairs = state.matches.filter(m => m.file); for (let i = 0; i < matchedPairs.length; i++) { const m = matchedPairs[i]; document.querySelector('[data-t="loading_msg"]').innerText = `${i+1}/${matchedPairs.length}: ${m.file.name}`; const pdfDoc = await PDFLib.PDFDocument.load(await m.file.arrayBuffer()); const font = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold); pdfDoc.getPages().forEach(p => { drawStampOnPage(p, m.excel, font); }); const label = sanitizeFileSegment(m.excel.label); const projectLabel = sanitizeFileSegment(state.projectName); zip.file(`${projectLabel} - ${m.file.name.replace('.pdf', '')} - ${label}.pdf`, await pdfDoc.save()); } const content = await zip.generateAsync({ type: 'blob' }); const link = document.createElement('a'); link.href = URL.createObjectURL(content); link.download = `${state.projectName.replace(/\s+/g, '_')}_OVERLAYS.zip`; link.click(); } finally { overlay.classList.add('hidden'); } }
+        async function processBatch() { const overlay = document.getElementById('loading-overlay'); overlay.classList.remove('hidden'); try { const zip = new JSZip(); const matchedPairs = state.matches.filter(m => m.file); for (let i = 0; i < matchedPairs.length; i++) { const m = matchedPairs[i]; document.querySelector('[data-t="loading_msg"]').innerText = `${i+1}/${matchedPairs.length}: ${m.file.name}`; const pdfDoc = await PDFLib.PDFDocument.load(await m.file.arrayBuffer()); const font = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold); pdfDoc.getPages().forEach(p => { drawStampOnPage(p, m.excel, font); }); const projectLabel = sanitizeFileSegment(state.projectName); zip.file(`${projectLabel} - ${m.file.name.replace('.pdf', '')}.pdf`, await pdfDoc.save()); } const content = await zip.generateAsync({ type: 'blob' }); const link = document.createElement('a'); link.href = URL.createObjectURL(content); link.download = `${state.projectName.replace(/\s+/g, '_')}_OVERLAYS.zip`; link.click(); } finally { overlay.classList.add('hidden'); } }
         function hexToRgb(hex) { const r = parseInt(hex.slice(1, 3), 16) / 255; const g = parseInt(hex.slice(3, 5), 16) / 255; const b = parseInt(hex.slice(5, 7), 16) / 255; return PDFLib.rgb(r || 0, g || 0, b || 0); }
         window.onload = render;
     </script>
