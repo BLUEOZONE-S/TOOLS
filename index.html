@@ -180,7 +180,7 @@
                     OVERLAY STUDIO
                 </h1>
                 <p class="text-slate-500 font-medium text-sm" data-t="subtitle">Automated RAL Overlay Engine</p>
-                <p id="version-label" class="text-slate-400 text-xs font-semibold uppercase tracking-widest mt-2">Version: 1.0.0</p>
+                <p id="version-label" class="text-slate-400 text-xs font-semibold uppercase tracking-widest mt-2">Version: 1.0.1</p>
                 <div class="flex items-center bg-slate-50 rounded-2xl p-2 border border-slate-200 overflow-x-auto no-scrollbar mt-4" id="stepper"></div>
             </div>
             
@@ -640,7 +640,7 @@
                                 <div id="drawing-container" class="preview-canvas-container" style="width: 100%; max-width: 900px;">
                                     <img src="${state.previewImg}" class="w-full h-auto rounded-sm block pointer-events-none" id="preview-drawing">
                                     <div id="drag-text" class="drag-handle font-black border-2 border-dashed border-transparent hover:border-indigo-500 rounded flex flex-col items-end text-right group transition-all ${state.config.stampBorderEnabled ? 'stamp-border' : ''}"
-                                        style="left: ${state.config.xPercent}%; top: ${state.config.yPercent}%; font-size: ${previewMetrics.fontSize}px; color: ${state.excelData[0]?.entries?.[0]?.color || '#0f172a'}; line-height: ${previewMetrics.lineHeight}px; padding: ${previewMetrics.padding}px ${previewMetrics.padding * 1.2}px; border-width: ${previewMetrics.borderWidth}px;"
+                                        style="left: ${state.config.xPercent}%; top: ${state.config.yPercent}%; font-size: ${previewMetrics.fontSize}px; color: ${state.excelData[0]?.entries?.[0]?.color || '#0f172a'}; line-height: ${previewMetrics.lineHeight}px; padding: ${previewMetrics.padding}px; border-width: ${previewMetrics.borderWidth}px;"
                                         onmousedown="startDrag(event)">
                                         <div class="absolute -top-8 bg-indigo-600 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap uppercase tracking-widest">${t('drag_msg')}</div>
                                         ${getStampPreviewHtml(state.excelData[0])}
@@ -792,10 +792,10 @@
         function formatQty(value) { if (value === undefined || value === null || value === '') return '1'; if (typeof value === 'number') return Number.isInteger(value) ? String(value) : String(value); return String(value); }
         function mergeQty(existing, next) { if (typeof existing === 'number' && typeof next === 'number') return existing + next; if (next === null || next === undefined || next === '') return existing; if (existing === null || existing === undefined || existing === '') return next; return `${formatQty(existing)}+${formatQty(next)}`; }
         function buildEntryLabel(entry) {
-            const elementSegment = entry.element ? `ELEMENT ${entry.element} - ` : '';
-            const gelSegment = entry.gelRal ? `GELCOAT ${entry.gelRal}` : 'GELCOAT --';
-            const topSegment = entry.topRal ? `TOPCOAT ${entry.topRal}` : 'TOPCOAT --';
-            return `${elementSegment}QTY ${formatQty(entry.qty)} - ${gelSegment} / ${topSegment}`;
+            const elementValue = entry.element ? entry.element : '--';
+            const gelValue = entry.gelRal ? entry.gelRal : '--';
+            const topValue = entry.topRal ? entry.topRal : '--';
+            return `Element_${elementValue}_QTY_${formatQty(entry.qty)}_GELCOAT_${gelValue}_TOPCOAT_${topValue}`;
         }
         function buildStampLabel(item) { return item.entries.map(entry => buildEntryLabel(entry)).join(', '); }
         function buildStampLines(item) {
@@ -1009,7 +1009,7 @@
             el.style.fontSize = `${metrics.fontSize}px`;
             el.style.lineHeight = `${metrics.lineHeight}px`;
             if (state.config.stampBorderEnabled) {
-                el.style.padding = `${metrics.padding}px ${metrics.padding * 1.2}px`;
+                el.style.padding = `${metrics.padding}px`;
                 el.style.borderWidth = `${metrics.borderWidth}px`;
             } else {
                 el.style.padding = '0';
