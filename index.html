@@ -180,7 +180,7 @@
                     OVERLAY STUDIO
                 </h1>
                 <p class="text-slate-500 font-medium text-sm" data-t="subtitle">Automated RAL Overlay Engine</p>
-                <p id="version-label" class="text-slate-400 text-xs font-semibold uppercase tracking-widest mt-2">Version: 3.0.0</p>
+                <p id="version-label" class="text-slate-400 text-xs font-semibold uppercase tracking-widest mt-2">Version: 3.5</p>
                 <div class="flex items-center bg-slate-50 rounded-2xl p-2 border border-slate-200 overflow-x-auto no-scrollbar mt-4" id="stepper"></div>
             </div>
             
@@ -768,7 +768,7 @@
                                         <i data-lucide="check-square" class="w-4 h-4 mx-auto"></i>
                                     </th>
                                     ${state.excelHeaders.map((h, i) => `
-                                        <th onclick="selectColumn(${i})" class="excel-cell p-3 min-w-[200px] transition-all 
+                                        <th onclick="selectColumn(${i})" class="excel-cell p-3 min-w-[300px] transition-all 
                                             ${state.selectedColIdx === i ? 'header-active-selection' : 
                                               state.mapping.key === i ? 'header-mapped-key' : 
                                               state.mapping.element === i ? 'header-mapped-element' : 
@@ -795,7 +795,7 @@
                                             const cell = row[cIdx];
                                             const content = (cell === undefined || cell === null || String(cell).trim() === '') ? '&nbsp;' : cell;
                                             return `
-                                            <td onclick="selectColumn(${cIdx})" class="excel-cell p-3 text-[11px] font-medium text-slate-600 border-r border-slate-100 cursor-pointer transition-all
+                                            <td onclick="selectColumn(${cIdx})" class="excel-cell p-3 min-w-[300px] text-[11px] font-medium text-slate-600 border-r border-slate-100 cursor-pointer transition-all
                                                 ${state.selectedColIdx === cIdx ? 'column-active-selection' : 
                                                   state.mapping.key === cIdx ? 'column-mapped-key' : 
                                                   state.mapping.element === cIdx ? 'column-mapped-element' : 
