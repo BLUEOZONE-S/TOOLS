@@ -180,7 +180,7 @@
                     OVERLAY STUDIO
                 </h1>
                 <p class="text-slate-500 font-medium text-sm" data-t="subtitle">Automated RAL Overlay Engine</p>
-                <p id="version-label" class="text-slate-400 text-xs font-semibold uppercase tracking-widest mt-2">Version: 2.0.0</p>
+                <p id="version-label" class="text-slate-400 text-xs font-semibold uppercase tracking-widest mt-2">Version: 2.0.1</p>
                 <div class="flex items-center bg-slate-50 rounded-2xl p-2 border border-slate-200 overflow-x-auto no-scrollbar mt-4" id="stepper"></div>
             </div>
             
@@ -1013,7 +1013,8 @@
                 });
                 if (exactCandidate) {
                     const suggestions = buildSuggestionList(excelParsed, candidates);
-                    return { excel: item, file: exactCandidate.file, status: 'exact', suggestions };
+                    const status = suggestions.length > 1 ? 'suggestion' : 'exact';
+                    return { excel: item, file: exactCandidate.file, status, suggestions };
                 }
                 const suggestions = buildSuggestionList(excelParsed, candidates.length ? candidates : parsedFiles);
                 if (candidates.length && suggestions.length) {
