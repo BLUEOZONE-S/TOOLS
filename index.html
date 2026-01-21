@@ -792,9 +792,9 @@
         function formatQty(value) { if (value === undefined || value === null || value === '') return '1'; if (typeof value === 'number') return Number.isInteger(value) ? String(value) : String(value); return String(value); }
         function mergeQty(existing, next) { if (typeof existing === 'number' && typeof next === 'number') return existing + next; if (next === null || next === undefined || next === '') return existing; if (existing === null || existing === undefined || existing === '') return next; return `${formatQty(existing)}+${formatQty(next)}`; }
         function buildEntryLabel(entry) {
-            const elementSegment = entry.element ? `EL ${entry.element} - ` : '';
-            const gelSegment = entry.gelRal ? `GEL COAT RAL ${entry.gelRal}` : 'GEL COAT RAL --';
-            const topSegment = entry.topRal ? `TOP COAT RAL ${entry.topRal}` : 'TOP COAT RAL --';
+            const elementSegment = entry.element ? `ELEMENT ${entry.element} - ` : '';
+            const gelSegment = entry.gelRal ? `GELCOAT ${entry.gelRal}` : 'GELCOAT --';
+            const topSegment = entry.topRal ? `TOPCOAT ${entry.topRal}` : 'TOPCOAT --';
             return `${elementSegment}QTY ${formatQty(entry.qty)} - ${gelSegment} / ${topSegment}`;
         }
         function buildStampLabel(item) { return item.entries.map(entry => buildEntryLabel(entry)).join(', '); }
@@ -851,14 +851,14 @@
         }
         function drawStampOnPage(page, item, font) {
             const { width, height } = page.getSize();
-            const x = (state.config.xPercent / 100) * width;
+            const xLeft = (state.config.xPercent / 100) * width;
             const yTop = height - (state.config.yPercent / 100) * height;
             const { lines, fontSize, lineHeight, maxWidth, textHeight, padding, borderWidth } = getStampMetrics(item, font);
             const boxHeight = textHeight + padding * 2;
             const boxBottom = yTop - boxHeight;
             if (state.config.stampBorderEnabled) {
                 page.drawRectangle({
-                    x: x - padding,
+                    x: xLeft,
                     y: boxBottom,
                     width: maxWidth + padding * 2,
                     height: boxHeight,
@@ -869,7 +869,7 @@
             const baseY = yTop - padding - fontSize;
             lines.forEach((line, index) => {
                 const lineWidth = font.widthOfTextAtSize(line.text, fontSize);
-                const textX = x + (maxWidth - lineWidth);
+                const textX = xLeft + padding + (maxWidth - lineWidth);
                 page.drawText(line.text, { x: textX, y: baseY - (lineHeight * index), size: fontSize, font, color: line.color });
             });
         }
