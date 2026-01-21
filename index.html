@@ -819,16 +819,29 @@
         function parseQty(input) { if (input === undefined || input === null) return null; const raw = String(input).trim(); if (!raw) return null; const normalized = raw.replace(',', '.'); const num = Number(normalized); return Number.isFinite(num) ? num : raw; }
         function formatQty(value) { if (value === undefined || value === null || value === '') return '1'; if (typeof value === 'number') return Number.isInteger(value) ? String(value) : String(value); return String(value); }
         function mergeQty(existing, next) { if (typeof existing === 'number' && typeof next === 'number') return existing + next; if (next === null || next === undefined || next === '') return existing; if (existing === null || existing === undefined || existing === '') return next; return `${formatQty(existing)}+${formatQty(next)}`; }
+        function formatRalLabel(value) {
+            if (!value) return '--';
+            const clean = String(value).replace(/RAL\s*/i, '').trim();
+            return clean ? `RAL ${clean}` : '--';
+        }
         function buildEntryLabel(entry) {
             const elementValue = entry.element ? entry.element : '--';
-            const gelValue = entry.gelRal ? entry.gelRal : '--';
-            const topValue = entry.topRal ? entry.topRal : '--';
-            return `Element_${elementValue}_QTY_${formatQty(entry.qty)}_GELCOAT_${gelValue}_TOPCOAT_${topValue}`;
+            const gelValue = formatRalLabel(entry.gelRal);
+            const topValue = formatRalLabel(entry.topRal);
+            return `ELEMENT ${elementValue} | GEL COAT: ${gelValue} | TOP COAT: ${topValue} | QTY ${formatQty(entry.qty)}`;
         }
         function buildStampLabel(item) { return item.entries.map(entry => buildEntryLabel(entry)).join(', '); }
         function buildStampLines(item) {
-            const lines = [{ text: state.projectName, color: PDFLib.rgb(0, 0, 0) }];
-            item.entries.forEach(entry => { lines.push({ text: buildEntryLabel(entry), color: hexToRgb(entry.color) }); });
+            const lines = [];
+            item.entries.forEach(entry => {
+                const elementValue = entry.element ? entry.element : '--';
+                const gelValue = formatRalLabel(entry.gelRal);
+                const topValue = formatRalLabel(entry.topRal);
+                lines.push({ text: `${item.key} - ELEMENT ${elementValue}`, color: PDFLib.rgb(0, 0, 0) });
+                lines.push({ text: `GEL COAT:${gelValue}`, color: hexToRgb(entry.color) });
+                lines.push({ text: `TOP COAT:${topValue}`, color: hexToRgb(entry.color) });
+                lines.push({ text: `QTY:${formatQty(entry.qty)}`, color: hexToRgb(entry.color) });
+            });
             return lines;
         }
         function getStampPreviewHtml(item) {
