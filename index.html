@@ -180,6 +180,7 @@
                     OVERLAY STUDIO
                 </h1>
                 <p class="text-slate-500 font-medium text-sm" data-t="subtitle">Automated RAL Overlay Engine</p>
+                <p id="version-label" class="text-slate-400 text-xs font-semibold uppercase tracking-widest mt-2">Version: 1.0.0</p>
                 <div class="flex items-center bg-slate-50 rounded-2xl p-2 border border-slate-200 overflow-x-auto no-scrollbar mt-4" id="stepper"></div>
             </div>
             
@@ -266,7 +267,8 @@
                 mapped_gel_label: "Gel Coat Col:",
                 mapped_top_label: "Top Coat Col:",
                 mapped_qty_label: "Qty Col:",
-                proj_placeholder: "e.g. LACO GLANERBROOK"
+                proj_placeholder: "e.g. LACO GLANERBROOK",
+                version_label: "Version:"
             },
             es: {
                 subtitle: "Motor de superposición RAL automatizado",
@@ -322,7 +324,8 @@
                 mapped_gel_label: "Col. Gel Coat:",
                 mapped_top_label: "Col. Top Coat:",
                 mapped_qty_label: "Col. Cant.:",
-                proj_placeholder: "ej. LACO GLANERBROOK"
+                proj_placeholder: "ej. LACO GLANERBROOK",
+                version_label: "Versión:"
             },
             nl: {
                 subtitle: "Geautomatiseerde RAL Overlay Engine",
@@ -378,7 +381,8 @@
                 mapped_gel_label: "Kol. Gelcoat:",
                 mapped_top_label: "Kol. Topcoat:",
                 mapped_qty_label: "Kol. Aantal:",
-                proj_placeholder: "bijv. LACO GLANERBROOK"
+                proj_placeholder: "bijv. LACO GLANERBROOK",
+                version_label: "Versie:"
             },
             pl: {
                 subtitle: "Zautomatyzowany silnik nakładek RAL",
@@ -434,9 +438,12 @@
                 mapped_gel_label: "Kol. Żelcoat:",
                 mapped_top_label: "Kol. Topcoat:",
                 mapped_qty_label: "Kol. Ilość:",
-                proj_placeholder: "np. LACO GLANERBROOK"
+                proj_placeholder: "np. LACO GLANERBROOK",
+                version_label: "Wersja:"
             }
         };
+
+        const APP_VERSION = "1.0.0";
 
         let state = {
             step: 1,
@@ -487,6 +494,8 @@
             lucide.createIcons();
             const subtitle = document.querySelector('[data-t="subtitle"]');
             if (subtitle) subtitle.innerText = t('subtitle');
+            const versionLabel = document.getElementById('version-label');
+            if (versionLabel) versionLabel.innerText = `${t('version_label')} ${APP_VERSION}`;
         }
 
         function renderStepper() {
