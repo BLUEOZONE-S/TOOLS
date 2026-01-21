@@ -923,7 +923,49 @@
         function handlePdfs(e) { state.pdfFiles = [...state.pdfFiles, ...Array.from(e.target.files).filter(f => f.type === 'application/pdf')]; render(); }
         function removePdf(idx) { state.pdfFiles.splice(idx, 1); render(); }
         async function goToStep(num) { state.step = num; if (num === 3) performMatching(); if (num === 4) await generateDrawingPreview(); render(); }
-        function performMatching() { const fuse = new Fuse(state.pdfFiles, { keys: ['name'], threshold: 0.4 }); state.matches = state.excelData.map(item => { const exact = state.pdfFiles.find(f => f.name.toLowerCase().includes(item.key.toLowerCase())); if (exact) return { excel: item, file: exact, status: 'exact' }; const fuzzy = fuse.search(item.key); return fuzzy.length > 0 ? { excel: item, file: fuzzy[0].item, status: 'suggestion' } : { excel: item, file: null, status: 'missing' }; }); }
+        function extractDrawingId(text) {
+            const cleaned = String(text).trim()
+                .replace(/^EL\s*/i, '')
+                .replace(/\.pdf$/i, '')
+                .replace(/_PVC$/i, '')
+                .replace(/[_\s]+/g, ' ')
+                .toLowerCase();
+            const match = cleaned.match(/([a-z]\d+[\s_][a-z]?\d+)/i);
+            return match ? match[1].replace(/\s/g, '').toLowerCase() : cleaned;
+        }
+        function hasSharedBaseId(excelId, fileId) {
+            const excelBase = excelId.match(/[a-z]\d+/i);
+            const fileBase = fileId.match(/[a-z]\d+/i);
+            return excelBase && fileBase && excelBase[0] === fileBase[0];
+        }
+        function performMatching() {
+            if (!state.pdfFiles.length) {
+                state.matches = state.excelData.map(item => ({ excel: item, file: null, status: 'missing' }));
+                return;
+            }
+            const fuse = new Fuse(state.pdfFiles, {
+                keys: ['name'],
+                threshold: 0.5,
+                ignoreLocation: true,
+                findAllMatches: true
+            });
+            state.matches = state.excelData.map(item => {
+                const excelId = extractDrawingId(item.key);
+                const exact = state.pdfFiles.find(file => {
+                    const fileId = extractDrawingId(file.name);
+                    return fileId.includes(excelId) || excelId.includes(fileId);
+                });
+                if (exact) return { excel: item, file: exact, status: 'exact' };
+                const fuzzyResults = fuse.search(excelId);
+                const validFuzzy = fuzzyResults.find(result => {
+                    const fileId = extractDrawingId(result.item.name);
+                    return hasSharedBaseId(excelId, fileId);
+                });
+                return validFuzzy
+                    ? { excel: item, file: validFuzzy.item, status: 'suggestion' }
+                    : { excel: item, file: null, status: 'missing' };
+            });
+        }
         async function generateDrawingPreview() {
             if (state.pdfFiles.length === 0) return;
             const pdf = await pdfjsLib.getDocument({ data: await state.pdfFiles[0].arrayBuffer() }).promise;
