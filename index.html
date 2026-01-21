@@ -630,7 +630,7 @@
                             <div class="lg:col-span-8 bg-slate-900 rounded-[40px] p-8 flex items-center justify-center min-h-[700px] overflow-hidden relative shadow-inner">
                                 <div id="drawing-container" class="preview-canvas-container" style="width: 100%; max-width: 900px;">
                                     <img src="${state.previewImg}" class="w-full h-auto rounded-sm block pointer-events-none" id="preview-drawing">
-                                    <div id="drag-text" class="drag-handle font-black border-2 border-dashed border-transparent hover:border-indigo-500 rounded flex flex-col items-start group transition-all ${state.config.stampBorderEnabled ? 'stamp-border' : ''}"
+                                    <div id="drag-text" class="drag-handle font-black border-2 border-dashed border-transparent hover:border-indigo-500 rounded flex flex-col items-end text-right group transition-all ${state.config.stampBorderEnabled ? 'stamp-border' : ''}"
                                         style="left: ${state.config.xPercent}%; top: ${state.config.yPercent}%; font-size: ${previewMetrics.fontSize}px; color: ${state.excelData[0]?.entries?.[0]?.color || '#0f172a'}; line-height: ${previewMetrics.lineHeight}px; padding: ${previewMetrics.padding}px ${previewMetrics.padding * 1.2}px; border-width: ${previewMetrics.borderWidth}px;"
                                         onmousedown="startDrag(event)">
                                         <div class="absolute -top-8 bg-indigo-600 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap uppercase tracking-widest">${t('drag_msg')}</div>
@@ -859,7 +859,9 @@
             }
             const baseY = yTop - padding - fontSize;
             lines.forEach((line, index) => {
-                page.drawText(line.text, { x, y: baseY - (lineHeight * index), size: fontSize, font, color: line.color });
+                const lineWidth = font.widthOfTextAtSize(line.text, fontSize);
+                const textX = x + (maxWidth - lineWidth);
+                page.drawText(line.text, { x: textX, y: baseY - (lineHeight * index), size: fontSize, font, color: line.color });
             });
         }
 
