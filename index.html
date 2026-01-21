@@ -180,7 +180,7 @@
                     OVERLAY STUDIO
                 </h1>
                 <p class="text-slate-500 font-medium text-sm" data-t="subtitle">Automated RAL Overlay Engine</p>
-                <p id="version-label" class="text-slate-400 text-xs font-semibold uppercase tracking-widest mt-2">Version: 2.0.1</p>
+                <p id="version-label" class="text-slate-400 text-xs font-semibold uppercase tracking-widest mt-2">Version: 3.0.0</p>
                 <div class="flex items-center bg-slate-50 rounded-2xl p-2 border border-slate-200 overflow-x-auto no-scrollbar mt-4" id="stepper"></div>
             </div>
             
@@ -455,7 +455,7 @@
             }
         };
 
-        const APP_VERSION = "2.0.0";
+        const APP_VERSION = "3.0.0";
 
         let state = {
             step: 1,
@@ -668,7 +668,7 @@
                                 <div id="drawing-container" class="preview-canvas-container" style="width: 100%; max-width: 900px;">
                                     <img src="${state.previewImg}" class="w-full h-auto rounded-sm block pointer-events-none" id="preview-drawing">
                                     <div id="drag-text" class="drag-handle font-black border-2 border-dashed border-transparent hover:border-indigo-500 rounded flex flex-col items-end text-right group transition-all ${state.config.stampBorderEnabled ? 'stamp-border' : ''}"
-                                        style="left: ${state.config.xPercent}%; top: ${state.config.yPercent}%; font-size: ${previewMetrics.fontSize}px; color: ${state.excelData[0]?.entries?.[0]?.color || '#0f172a'}; line-height: ${previewMetrics.lineHeight}px; padding: ${previewMetrics.padding}px; border-width: ${previewMetrics.borderWidth}px;"
+                                        style="left: ${state.config.xPercent}%; top: ${state.config.yPercent}%; transform: translateX(-100%); font-size: ${previewMetrics.fontSize}px; color: ${state.excelData[0]?.entries?.[0]?.color || '#0f172a'}; line-height: ${previewMetrics.lineHeight}px; padding: ${previewMetrics.padding}px; border-width: ${previewMetrics.borderWidth}px;"
                                         onmousedown="startDrag(event)">
                                         <div class="absolute -top-8 bg-indigo-600 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap uppercase tracking-widest">${t('drag_msg')}</div>
                                         ${getStampPreviewHtml(state.excelData[0])}
@@ -833,11 +833,12 @@
         function buildStampLabel(item) { return item.entries.map(entry => buildEntryLabel(entry)).join(', '); }
         function buildStampLines(item) {
             const lines = [];
+            const projectLabel = state.projectName?.trim() || item.key || '--';
             item.entries.forEach(entry => {
                 const elementValue = entry.element ? entry.element : '--';
                 const gelValue = formatRalLabel(entry.gelRal);
                 const topValue = formatRalLabel(entry.topRal);
-                lines.push({ text: `${item.key} - ELEMENT ${elementValue}`, color: PDFLib.rgb(0, 0, 0) });
+                lines.push({ text: `${projectLabel} - ELEMENT ${elementValue}`, color: PDFLib.rgb(0, 0, 0) });
                 lines.push({ text: `GEL COAT:${gelValue}`, color: hexToRgb(entry.color) });
                 lines.push({ text: `TOP COAT:${topValue}`, color: hexToRgb(entry.color) });
                 lines.push({ text: `QTY:${formatQty(entry.qty)}`, color: hexToRgb(entry.color) });
@@ -892,16 +893,18 @@
         }
         function drawStampOnPage(page, item, font) {
             const { width, height } = page.getSize();
-            const xLeft = (state.config.xPercent / 100) * width;
+            const xRight = (state.config.xPercent / 100) * width;
             const yTop = height - (state.config.yPercent / 100) * height;
             const { lines, fontSize, lineHeight, maxWidth, textHeight, padding, borderWidth } = getStampMetrics(item, font);
+            const boxWidth = maxWidth + padding * 2;
             const boxHeight = textHeight + padding * 2;
+            const xLeft = xRight - boxWidth;
             const boxBottom = yTop - boxHeight;
             if (state.config.stampBorderEnabled) {
                 page.drawRectangle({
                     x: xLeft,
                     y: boxBottom,
-                    width: maxWidth + padding * 2,
+                    width: boxWidth,
                     height: boxHeight,
                     borderColor: PDFLib.rgb(0, 0, 0),
                     borderWidth
@@ -1090,7 +1093,7 @@
             const el = document.getElementById('drag-text');
             if (el) {
                 const rect = el.getBoundingClientRect();
-                dragOffset = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+                dragOffset = { x: rect.right - e.clientX, y: e.clientY - rect.top };
             }
             isDragging = true;
             e.preventDefault();
@@ -1099,7 +1102,7 @@
         function doDrag(e) {
             if (!isDragging) return;
             const rect = document.getElementById('drawing-container').getBoundingClientRect();
-            const anchorX = e.clientX - dragOffset.x;
+            const anchorX = e.clientX + dragOffset.x;
             const anchorY = e.clientY - dragOffset.y;
             state.config.xPercent = Math.max(0, Math.min(100, ((anchorX - rect.left) / rect.width) * 100));
             state.config.yPercent = Math.max(0, Math.min(100, ((anchorY - rect.top) / rect.height) * 100));
