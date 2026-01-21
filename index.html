@@ -180,7 +180,7 @@
                     OVERLAY STUDIO
                 </h1>
                 <p class="text-slate-500 font-medium text-sm" data-t="subtitle">Automated RAL Overlay Engine</p>
-                <p id="version-label" class="text-slate-400 text-xs font-semibold uppercase tracking-widest mt-2">Version: 1.0.1</p>
+                <p id="version-label" class="text-slate-400 text-xs font-semibold uppercase tracking-widest mt-2">Version: 2.0.0</p>
                 <div class="flex items-center bg-slate-50 rounded-2xl p-2 border border-slate-200 overflow-x-auto no-scrollbar mt-4" id="stepper"></div>
             </div>
             
@@ -261,7 +261,10 @@
                 process_rows: "PROCESS {count} ROWS",
                 matched: "Matched",
                 suggested: "Suggested",
+                manual: "Manual",
                 missing: "Missing",
+                browse_file: "Browse PDF",
+                select_suggestion: "Select suggestion",
                 mapped_id_label: "Drawing ID Col:",
                 mapped_element_label: "Element Col:",
                 mapped_gel_label: "Gel Coat Col:",
@@ -318,7 +321,10 @@
                 process_rows: "PROCESAR {count} FILAS",
                 matched: "Emparejado",
                 suggested: "Sugerido",
+                manual: "Manual",
                 missing: "Faltante",
+                browse_file: "Buscar PDF",
+                select_suggestion: "Elegir sugerencia",
                 mapped_id_label: "Col. ID Plano:",
                 mapped_element_label: "Col. Elemento:",
                 mapped_gel_label: "Col. Gel Coat:",
@@ -375,7 +381,10 @@
                 process_rows: "{count} RIJEN VERWERKEN",
                 matched: "Gekoppeld",
                 suggested: "Suggestie",
+                manual: "Handmatig",
                 missing: "Ontbreekt",
+                browse_file: "Blader PDF",
+                select_suggestion: "Kies suggestie",
                 mapped_id_label: "Kol. Tekening ID:",
                 mapped_element_label: "Kol. Element:",
                 mapped_gel_label: "Kol. Gelcoat:",
@@ -432,7 +441,10 @@
                 process_rows: "PRZETWÓRZ {count} WIERSZY",
                 matched: "Dopasowano",
                 suggested: "Sugerowane",
+                manual: "Ręcznie",
                 missing: "Brak",
+                browse_file: "Wybierz PDF",
+                select_suggestion: "Wybierz sugestię",
                 mapped_id_label: "Kol. ID rysunku:",
                 mapped_element_label: "Kol. Element:",
                 mapped_gel_label: "Kol. Żelcoat:",
@@ -443,7 +455,7 @@
             }
         };
 
-        const APP_VERSION = "1.0.0";
+        const APP_VERSION = "2.0.0";
 
         let state = {
             step: 1,
@@ -593,9 +605,25 @@
                                                 </td>
                                                 <td class="px-6 py-5 font-bold text-slate-700">${m.file ? m.file.name : `<span class="text-rose-400">${t('missing')}</span>`}</td>
                                                 <td class="px-6 py-5">${getStatusBadge(m)}</td>
-                                                <td class="px-6 py-5 text-right flex justify-end gap-2">
-                                                    ${m.status === 'suggestion' ? `<button onclick="confirmMatch(${i})" class="p-2 bg-emerald-500 text-white rounded-lg"><i data-lucide="check" class="w-4 h-4"></i></button>` : ''}
-                                                    <button onclick="removeMatch(${i})" class="p-2 text-slate-300 hover:text-rose-500 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                                <td class="px-6 py-5">
+                                                    <div class="flex flex-col items-end gap-3">
+                                                        <div class="flex justify-end gap-2">
+                                                            ${m.status === 'suggestion' ? `<button onclick="confirmMatch(${i})" class="p-2 bg-emerald-500 text-white rounded-lg"><i data-lucide="check" class="w-4 h-4"></i></button>` : ''}
+                                                            <button onclick="removeMatch(${i})" class="p-2 text-slate-300 hover:text-rose-500 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                                        </div>
+                                                        <div class="flex flex-col lg:flex-row items-end gap-2">
+                                                            <select class="bg-slate-50 border border-slate-200 text-xs font-bold text-slate-600 rounded-lg px-2 py-1.5 max-w-[220px] truncate"
+                                                                onchange="applySuggestedMatch(${i}, this.value)"
+                                                                ${!m.suggestions || m.suggestions.length === 0 ? 'disabled' : ''}>
+                                                                <option value="">${t('select_suggestion')}</option>
+                                                                ${(m.suggestions || []).map(file => `<option value="${file.name}">${file.name}</option>`).join('')}
+                                                            </select>
+                                                            <label class="cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-200 transition-all">
+                                                                <input type="file" class="hidden" accept=".pdf" onchange="handleManualMatchFile(${i}, event)">
+                                                                <i data-lucide="search"></i> ${t('browse_file')}
+                                                            </label>
+                                                        </div>
+                                                    </div>
                                                 </td>
                                             </tr>`).join('')}
                                     </tbody>
@@ -923,47 +951,75 @@
         function handlePdfs(e) { state.pdfFiles = [...state.pdfFiles, ...Array.from(e.target.files).filter(f => f.type === 'application/pdf')]; render(); }
         function removePdf(idx) { state.pdfFiles.splice(idx, 1); render(); }
         async function goToStep(num) { state.step = num; if (num === 3) performMatching(); if (num === 4) await generateDrawingPreview(); render(); }
-        function extractDrawingId(text) {
-            const cleaned = String(text).trim()
+        function normalizeDrawingText(text) {
+            return String(text)
+                .trim()
                 .replace(/^EL\s*/i, '')
                 .replace(/\.pdf$/i, '')
                 .replace(/_PVC$/i, '')
-                .replace(/[_\s]+/g, ' ')
-                .toLowerCase();
-            const match = cleaned.match(/([a-z]\d+[\s_][a-z]?\d+)/i);
-            return match ? match[1].replace(/\s/g, '').toLowerCase() : cleaned;
+                .replace(/[_\-]+/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .toUpperCase();
         }
-        function hasSharedBaseId(excelId, fileId) {
-            const excelBase = excelId.match(/[a-z]\d+/i);
-            const fileBase = fileId.match(/[a-z]\d+/i);
-            return excelBase && fileBase && excelBase[0] === fileBase[0];
-        }
-        function performMatching() {
-            if (!state.pdfFiles.length) {
-                state.matches = state.excelData.map(item => ({ excel: item, file: null, status: 'missing' }));
-                return;
+        function parseDrawingTokens(text) {
+            const normalized = normalizeDrawingText(text);
+            const segments = {};
+            const segmentRegex = /(?:^|[^A-Z0-9])([DRLG])\s*0*([0-9]+)/gi;
+            let match;
+            while ((match = segmentRegex.exec(normalized))) {
+                const value = match[2].replace(/^0+/, '') || '0';
+                segments[match[1].toUpperCase()] = value;
             }
-            const fuse = new Fuse(state.pdfFiles, {
-                keys: ['name'],
-                threshold: 0.5,
+            const remainder = normalized.replace(segmentRegex, ' ').replace(/\s+/g, ' ').trim();
+            return {
+                normalized,
+                segments,
+                remainder,
+                searchKey: remainder || normalized
+            };
+        }
+        function segmentsMatch(excelParsed, fileParsed) {
+            return Object.entries(excelParsed.segments).every(([key, value]) => fileParsed.segments[key] === value);
+        }
+        function buildSuggestionList(excelParsed, candidates) {
+            if (!candidates.length) return [];
+            const fuse = new Fuse(candidates, {
+                keys: ['searchKey'],
+                threshold: 0.35,
                 ignoreLocation: true,
                 findAllMatches: true
             });
+            const results = fuse.search(excelParsed.searchKey);
+            const ranked = results.length ? results.map(result => result.item) : candidates;
+            return ranked.slice(0, 5).map(item => item.file);
+        }
+        function performMatching() {
+            if (!state.pdfFiles.length) {
+                state.matches = state.excelData.map(item => ({ excel: item, file: null, status: 'missing', suggestions: [] }));
+                return;
+            }
+            const parsedFiles = state.pdfFiles.map(file => {
+                const parsed = parseDrawingTokens(file.name);
+                return { file, parsed, searchKey: parsed.searchKey };
+            });
             state.matches = state.excelData.map(item => {
-                const excelId = extractDrawingId(item.key);
-                const exact = state.pdfFiles.find(file => {
-                    const fileId = extractDrawingId(file.name);
-                    return fileId.includes(excelId) || excelId.includes(fileId);
+                const excelParsed = parseDrawingTokens(item.key);
+                const candidates = parsedFiles.filter(candidate => segmentsMatch(excelParsed, candidate.parsed));
+                const excelCompact = excelParsed.normalized.replace(/\s/g, '');
+                const exactCandidate = candidates.find(candidate => {
+                    const fileCompact = candidate.parsed.normalized.replace(/\s/g, '');
+                    return fileCompact.includes(excelCompact) || excelCompact.includes(fileCompact);
                 });
-                if (exact) return { excel: item, file: exact, status: 'exact' };
-                const fuzzyResults = fuse.search(excelId);
-                const validFuzzy = fuzzyResults.find(result => {
-                    const fileId = extractDrawingId(result.item.name);
-                    return hasSharedBaseId(excelId, fileId);
-                });
-                return validFuzzy
-                    ? { excel: item, file: validFuzzy.item, status: 'suggestion' }
-                    : { excel: item, file: null, status: 'missing' };
+                if (exactCandidate) {
+                    const suggestions = buildSuggestionList(excelParsed, candidates);
+                    return { excel: item, file: exactCandidate.file, status: 'exact', suggestions };
+                }
+                const suggestions = buildSuggestionList(excelParsed, candidates.length ? candidates : parsedFiles);
+                if (candidates.length && suggestions.length) {
+                    return { excel: item, file: suggestions[0], status: 'suggestion', suggestions };
+                }
+                return { excel: item, file: null, status: 'missing', suggestions };
             });
         }
         async function generateDrawingPreview() {
@@ -1048,7 +1104,31 @@
         }
         function confirmMatch(idx) { state.matches[idx].status = 'confirmed'; render(); }
         function removeMatch(idx) { state.matches[idx].file = null; state.matches[idx].status = 'missing'; render(); }
-        function getStatusBadge(m) { const base = "px-3 py-1 rounded-full text-[10px] font-black uppercase "; if (m.status === 'exact') return `<span class="${base} bg-emerald-100 text-emerald-700">${t('matched')}</span>`; if (m.status === 'suggestion') return `<span class="${base} bg-amber-100 text-amber-700">${t('suggested')}</span>`; return `<span class="${base} bg-slate-100 text-slate-400">${t('missing')}</span>`; }
+        function applySuggestedMatch(idx, fileName) {
+            if (!fileName) return;
+            const file = state.pdfFiles.find(item => item.name === fileName);
+            if (!file) return;
+            state.matches[idx].file = file;
+            state.matches[idx].status = 'manual';
+            render();
+        }
+        function handleManualMatchFile(idx, event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (!state.pdfFiles.some(existing => existing.name === file.name && existing.size === file.size)) {
+                state.pdfFiles.push(file);
+            }
+            state.matches[idx].file = file;
+            state.matches[idx].status = 'manual';
+            render();
+        }
+        function getStatusBadge(m) {
+            const base = "px-3 py-1 rounded-full text-[10px] font-black uppercase ";
+            if (m.status === 'exact' || m.status === 'confirmed') return `<span class="${base} bg-emerald-100 text-emerald-700">${t('matched')}</span>`;
+            if (m.status === 'manual') return `<span class="${base} bg-sky-100 text-sky-700">${t('manual')}</span>`;
+            if (m.status === 'suggestion') return `<span class="${base} bg-amber-100 text-amber-700">${t('suggested')}</span>`;
+            return `<span class="${base} bg-slate-100 text-slate-400">${t('missing')}</span>`;
+        }
 
         async function renderReviewSamples() { const main = document.getElementById('main-content'); main.innerHTML = `<div class="bg-white p-8 rounded-3xl shadow-xl border border-slate-200"><div class="flex justify-between items-center mb-10"><h2 class="text-3xl font-black text-indigo-950 uppercase italic">${t('preflight')}</h2><button onclick="goToStep(6)" class="px-10 py-4 bg-indigo-600 text-white rounded-2xl font-black">${t('continue_finish')}</button></div><div id="samples-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div></div>`; const matched = state.matches.filter(m => m.file).slice(0, 5); for (let m of matched) { const url = await generateSamplePreview(m); document.getElementById('samples-container').innerHTML += `<div class="space-y-3"><div class="bg-slate-900 p-1 rounded-2xl shadow-lg overflow-hidden"><img src="${url}" class="w-full h-auto rounded-xl"></div><div class="font-black text-indigo-950 text-xs px-2 truncate">${m.file.name}</div></div>`; } }
         async function generateSamplePreview(match) {
