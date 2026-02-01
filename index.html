@@ -1,3 +1,23 @@
+<!--
+POLICY COMPLIANCE REVIEW (Vortex Internal Tooling)
+File: index.html
+Reviewed: 2026-02-01
+Reviewer: Codex
+
+Compliant:
+- [ ] Client-side processing only; files handled locally in browser memory.
+- [ ] No persistent browser storage (localStorage/sessionStorage) used.
+
+Non-compliant:
+- [ ] None noted.
+
+Needs review:
+- [ ] Confirm approved font policy (system fonts used; bundle vetted fonts if branding required).
+- [ ] Confirm export filename conventions for confidential projects (project name + element).
+
+Notes / Actions:
+- Consider adding a UI reminder that exported ZIPs contain confidential data.
+-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,8 +34,6 @@
     <script src="libs/pdf.min.js"></script>
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap');
-        
         :root {
             --primary: #60a5fa;
             --emerald: #7dd3fc;
@@ -29,7 +47,7 @@
             --glass-subtle: rgba(15, 23, 42, 0.62);
         }
 
-        body.vortex-body { font-family: 'Sora', sans-serif; overflow-x: hidden; background: #d6f4f1; color: var(--glass-text); }
+        body.vortex-body { font-family: "Segoe UI", "Inter", "Helvetica Neue", Arial, sans-serif; overflow-x: hidden; background: #d6f4f1; color: var(--glass-text); }
 
         .vortex-bg {
             position: fixed;
